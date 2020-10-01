@@ -1,0 +1,6 @@
+[submodule ".\\lib\\ESP-make-easy\\"]
+	path = .\\lib\\ESP-make-easy\\
+	url = git@github.com:sensor-dashboard/ESP-make-easy.git
+[submodule "lib/ESP-make-easy"]
+	path = lib/ESP-make-easy
+	url = git@github.com:sensor-dashboard/ESP-make-easy.git
