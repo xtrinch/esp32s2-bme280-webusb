@@ -6,7 +6,7 @@ Adafruit_Sensor *bme_pressure = bme.getPressureSensor();
 Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 
 bool setupbme280() {
-  if (!bme.begin(0x76)) {
+  if (!bme.begin(CFG_I2C_ADDRESS)) {
     ardprintf("bme280: Could not find a valid bme280 sensor, check wiring!");
     return false;
   }

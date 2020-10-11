@@ -8,4 +8,5 @@ env.Append(CPPDEFINES=[
   ("WIFI_SSID", "ssid"), # define only if preconfiguring
 	("WIFI_PASSWORD", "pass"), # define only if preconfiguring
   ("ACCESS_TOKEN", "token"), # define only if preconfiguring
+  ("I2C_ADDRESS", 0x76),
 ])
