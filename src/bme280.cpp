@@ -11,9 +11,9 @@ bool setupbme280() {
     return false;
   }
 
-  bme_temp->printSensorDetails();
-  bme_pressure->printSensorDetails();
-  bme_humidity->printSensorDetails();
+  // bme_temp->printSensorDetails();
+  // bme_pressure->printSensorDetails();
+  // bme_humidity->printSensorDetails();
 
   return true;
 }

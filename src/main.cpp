@@ -1,5 +1,9 @@
 #include "main.h"
 
+// #ifdef ESP8266
+// ADC_MODE(ADC_VCC);
+// #endif
+
 void setup() {
   Serial.begin(115200);
   while (!Serial);
@@ -43,14 +47,20 @@ void setup() {
     return;
   }
 
+  // #ifdef ESP8266
+  // float vccReading = ESP.getVcc();
+  // float voltage = vccReading / 1024.0;
+  // ardprintf("Voltage: %.2f", voltage);
+  // #endif
+
   char url[150];
-  snprintf(url, 500, "http://%s/api/measurements/multi", CFG_SENSOR_DASHBOARD_URL);
+  snprintf(url, 500, "https://%s/api/measurements/multi", CFG_SENSOR_DASHBOARD_URL);
   char accessToken[60] = CFG_ACCESS_TOKEN;
   #ifndef PRECONFIGURED
   readFromEEPROM(accessToken, "access_token");
   #endif
 
-  makeNetworkRequest(url, accessToken, jsonPayload);
+  makeSecureNetworkRequest(url, accessToken, jsonPayload);
 }
 
 void loop() {
