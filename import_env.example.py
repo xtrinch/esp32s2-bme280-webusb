@@ -13,4 +13,5 @@ env.Append(CPPDEFINES=[
   ("SPI_MOSI", 2),
   ("SPI_MISO", 3),
   ("SPI_SCK", 4),
+  ("DEBUG", 1),
 ])

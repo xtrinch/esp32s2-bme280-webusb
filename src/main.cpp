@@ -1,11 +1,22 @@
 #include "main.h"
+#ifdef ESP32
+#include "esp32-hal-cpu.h"
+#endif
 
 // #ifdef ESP8266
 // ADC_MODE(ADC_VCC);
 // #endif
 
 void setup() {
+  #ifdef ESP32
+  setCpuFrequencyMhz(80);
+  #endif
+
   Serial.begin(115200);
+  #ifndef DEBUG
+  Serial.setDebugOutput(0);
+  #endif
+  
   while (!Serial);
 
   setupEEPROM();
@@ -30,10 +41,6 @@ void setup() {
     return;
   }
 
-  if (!setupWiFi()) {
-    goToSleep();
-  }
-
   if (!setupbme280()) {
     goToSleep();
   };
@@ -45,6 +52,10 @@ void setup() {
     ardprintf("Failed to perform reading :(");
     goToSleep();
     return;
+  }
+
+  if (!setupWiFi()) {
+    goToSleep();
   }
 
   char accessToken[60] = CFG_ACCESS_TOKEN;
@@ -89,5 +100,7 @@ void loop() {
     return;
   }
 
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
   goToSleep();
 }
