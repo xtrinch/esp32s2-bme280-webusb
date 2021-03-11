@@ -1,16 +1,10 @@
 #include "main.h"
-#ifdef ESP32
-#include "esp32-hal-cpu.h"
-#endif
 
-// #ifdef ESP8266
-// ADC_MODE(ADC_VCC);
-// #endif
+RTC_DATA_ATTR int recordCounter = 0;
+RTC_DATA_ATTR bme280record records[MAX_RTC_RECORDS];
 
 void setup() {
-  #ifdef ESP32
-  setCpuFrequencyMhz(80);
-  #endif
+  WiFi.mode(WIFI_MODE_NULL);
 
   Serial.begin(115200);
   #ifndef DEBUG
@@ -19,44 +13,59 @@ void setup() {
   
   while (!Serial);
 
-  setupEEPROM();
+  #ifndef PRECONFIGURED
+    setupEEPROM();
 
-  // uncomment when you want to programmatically clear config
-  // clearConfig();
+    // uncomment when you want to programmatically clear config
+    // clearConfig();
 
-  setupButton();
+    setupButton();
 
-  if (!isConfigSaved()) {
-    if (!setupAP()) {
-      goToSleep();
+    if (!isConfigSaved()) {
+      if (!setupAP()) {
+        goToSleep();
+      }
+
+      listenForConfig();
+      cleanupAP();
     }
 
-    listenForConfig();
-    cleanupAP();
-  }
-
-  // do not do anything if button is pressed
-  if (digitalRead(BTN_PIN) == BTN_PRESSED_STATE) {
-    ardprintf("Button pressed upon startup, skipping WiFi setup");
-    return;
-  }
+    // do not do anything if button is pressed
+    if (digitalRead(BTN_PIN) == BTN_PRESSED_STATE) {
+      ardprintf("Button pressed upon startup, skipping WiFi setup");
+      return;
+    }
+  #endif
 
   if (!setupbme280()) {
     goToSleep();
   };
 
-  char jsonPayload[500];
+  ardprintf("Measurement %d starting", recordCounter);
 
   // make a sensor reading
-  if (!makeMeasurement(jsonPayload)) {
+  if (!makeMeasurement(&records[recordCounter])) {
     ardprintf("Failed to perform reading :(");
     goToSleep();
     return;
   }
 
+  ardprintf("Measurement %d done", recordCounter);
+  recordCounter++;
+
+  if (recordCounter < MAX_RTC_RECORDS) {
+    ardprintf("Going to sleep, next up is: %d", recordCounter);
+    goToSleep();
+    return;
+  }
+  recordCounter = 0;
+
   if (!setupWiFi()) {
     goToSleep();
   }
+
+  char jsonPayload[900];
+  getJsonPayload(jsonPayload, records);
 
   char accessToken[60] = CFG_ACCESS_TOKEN;
   #ifndef PRECONFIGURED
@@ -95,10 +104,12 @@ void loop() {
   /* do nothing in loop except check button, 
     esp will be in deep sleep in between measurements which will make setup re-run */
 
+  #ifndef PRECONFIGURED
   if (checkButtonPressed()) {
       // do not execute anything else when button is pressed
     return;
   }
+  #endif
 
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);

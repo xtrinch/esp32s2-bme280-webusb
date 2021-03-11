@@ -1,16 +1,20 @@
 #ifndef bme280_H_INCLUDED
 #define bme280_H_INCLUDED
 
-#include <Arduino.h>
 #include <Adafruit_BME280.h>
-#include "common.h"
+#include "ArduinoJson.h"
+#include "main.h"
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define CFG_I2C_ADDRESS I2C_ADDRESS
 
-extern Adafruit_BME280 bme; // I2C
+typedef struct bme280record {
+  float temp;
+  float pressure;
+  float humidity;
+} bme280record;
 
 bool setupbme280();
-bool makeMeasurement(char * buf);
-
+bool makeMeasurement(bme280record *record);
+bool getJsonPayload(char * buf, bme280record records[]);
 #endif

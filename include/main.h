@@ -8,9 +8,12 @@
 #include "station.h"
 #include "pushbutton.h"
 #include "sleep.h"
+#include "esp32-hal-cpu.h"
 
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+
+#define MAX_RTC_RECORDS 4
 
 #endif
