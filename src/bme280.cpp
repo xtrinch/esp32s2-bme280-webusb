@@ -11,6 +11,9 @@ bool setupbme280() {
     return false;
   }
 
+  // forced mode - need to force measurement, so that we hopefully save some power
+  bme.setSampling(Adafruit_BME280::MODE_FORCED);
+
   // #ifdef DEBUG
   // bme_temp->printSensorDetails();
   // bme_pressure->printSensorDetails();
@@ -21,67 +24,35 @@ bool setupbme280() {
 }
 
 bool makeMeasurement(bme280record * record) {
-  sensors_event_t temp_event, pressure_event, humidity_event;
-  bme_temp->getEvent(&temp_event);
-  bme_pressure->getEvent(&pressure_event);
-  bme_humidity->getEvent(&humidity_event);
-  
-  ardprintf("Temp:%.2fC,hum:%.2f%%,pres:%.2fhPa", temp_event.temperature, humidity_event.relative_humidity, pressure_event.pressure);
+  // in forced mode, tell sensor explicitly to refresh measurements
+  bme.takeForcedMeasurement();
 
-  record->humidity = humidity_event.relative_humidity;
-  record->temp = temp_event.temperature;
-  record->pressure = pressure_event.pressure;
+  record->humidity = bme.readHumidity();
+  record->temp = bme.readTemperature();
+  record->pressure = bme.readPressure();
 
+  ardprintf("Temp:%.2fC,hum:%.2f%%,pres:%.2fhPa", record->temp, record->humidity, record->pressure);
   return true;
 }
-
-// bool makeMeasurementAndJson(char * buf) {
-//   sensors_event_t temp_event, pressure_event, humidity_event;
-//   bme_temp->getEvent(&temp_event);
-//   bme_pressure->getEvent(&pressure_event);
-//   bme_humidity->getEvent(&humidity_event);
-  
-//   ardprintf("Temp:%.2fC,hum:%.2f%%,pres:%.2fhPa", temp_event.temperature, humidity_event.relative_humidity, pressure_event.pressure);
-
-//   snprintf(buf, 500, "{" 
-//       "\"measurements\":["
-//         "{"
-//             "\"measurement\": %f,"
-//             "\"measurementType\": \"humidity\""
-//         "},"
-//         "{"
-//             "\"measurement\": %f,"
-//             "\"measurementType\": \"temperature\""
-//         "},"
-//         "{"
-//             "\"measurement\": %f,"
-//             "\"measurementType\": \"pressure\""
-//         "}"
-//       "]"
-//   "}", humidity_event.relative_humidity, temp_event.temperature, pressure_event.pressure);
-
-//   return true;
-// }
-
 
 bool getJsonPayload(char *buf, bme280record records[]) {
   StaticJsonDocument<1000> doc; // <- 1000 bytes in the heap
 
   JsonArray measurements = doc.createNestedArray("measurements");
 
-  for (int i=0; i<MAX_RTC_RECORDS; i++) {
+  for (int i=0; i<maxRtcRecords; i++) {
     JsonObject measurement = measurements.createNestedObject();
     measurement["measurement"] = records[i].temp;
     measurement["measurementType"] = "temperature";
-    measurement["timeAgo"] = (MAX_RTC_RECORDS - i - 1) * SLEEP_SECONDS;
+    measurement["timeAgo"] = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
     JsonObject measurement1 = measurements.createNestedObject();
     measurement1["measurement"] = records[i].humidity;
     measurement1["measurementType"] = "humidity";
-    measurement1["timeAgo"] = (MAX_RTC_RECORDS - i - 1) * SLEEP_SECONDS;
+    measurement1["timeAgo"] = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
     JsonObject measurement2 = measurements.createNestedObject();
     measurement2["measurement"] = records[i].pressure;
     measurement2["measurementType"] = "pressure";
-    measurement2["timeAgo"] = (MAX_RTC_RECORDS - i - 1) * SLEEP_SECONDS;
+    measurement2["timeAgo"] = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
   }
 
   serializeJson(doc, (void *)buf, 900);

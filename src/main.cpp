@@ -39,11 +39,19 @@ class MyCDCUSBCallbacks: public CDCCallbacks {
   }
 };
 
+void sleep() {
+  if (!usbConnected) {
+    goToSleep(sleepInMinutes*60);
+  }
+}
+
 void setup() {
   WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
+  pixels.clear();
+  pixels.show();
 
-  WebUSBSerial.landingPageURI("localhost:3001", false);
+  WebUSBSerial.landingPageURI("iotfreezer.com", false);
   WebUSBSerial.deviceID(0x2341, 0x0002);
   WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
   USBSerial.setCallbacks(new MyCDCUSBCallbacks());
@@ -59,49 +67,55 @@ void setup() {
   #ifndef PRECONFIGURED
     setupEEPROM();
     if (isConfigSaved()) {
-      maxRtcRecords = readIntFromEEPROM("maxRtcRecords");
-      sleepInMinutes = readIntFromEEPROM("sleepInMinutes");
+      maxRtcRecords = readIntFromEEPROM("max_rtc_records");
+      sleepInMinutes = readIntFromEEPROM("time_between_measurements");
     }
   #endif
 
   // wait if usb connection appears - below 500 won't work
   delay(500);
   if (usbConnected) {
-    pixels.begin();
+    ardprintf("USB connected!");
     pixels.setPixelColor(0, pixels.Color(255, 0, 0));
     pixels.show();
+    // TODO: uncomment
     return; // don't do the measurement
   }
 
+  // TODO: remove
+  // delay(10000);
+
   if (!isConfigSaved()) {
-    goToSleep(sleepInMinutes*60);
+    USBSerial.println("No config saved :(");
+    sleep();
   };
 
   if (!setupbme280()) {
-    goToSleep(sleepInMinutes*60);
+    USBSerial.println("BME setup is falsch :(");
+    sleep();
   };
 
-  ardprintf("Measurement %d starting", recordCounter);
+  USBSerial.printf("Measurement %d starting", recordCounter);
 
   // make a sensor reading
   if (!makeMeasurement(&records[recordCounter])) {
-    ardprintf("Failed to perform reading :(");
-    goToSleep(sleepInMinutes*60);
+    USBSerial.printf("Failed to perform reading :(");
+    sleep();
     return;
   }
 
-  ardprintf("Measurement %d done", recordCounter);
+  USBSerial.printf("Measurement %d done", recordCounter);
   recordCounter++;
 
-  if (recordCounter < MAX_RTC_RECORDS) {
-    ardprintf("Going to sleep, next up is: %d", recordCounter);
-    goToSleep(sleepInMinutes*60);
+  if (recordCounter < maxRtcRecords) {
+    USBSerial.printf("Going to sleep, next up is: %d", recordCounter);
+    sleep();
     return;
   }
   recordCounter = 0;
 
   if (!setupWiFi()) {
-    goToSleep(sleepInMinutes*60);
+    sleep();
   }
 
   char jsonPayload[900];
@@ -133,8 +147,9 @@ void setup() {
   "JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo\n" \
   "Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ\n" \
   "-----END CERTIFICATE-----\n";
-  makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken, jsonPayload, NULL, "POST", ca_cert);
+  int httpCode = makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken, jsonPayload, NULL, "POST", ca_cert);
 
+  USBSerial.printf("API call HTTP code: %d", httpCode);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 }
@@ -149,6 +164,7 @@ void echo_all(char c)
 char inputJson[300] = "";
 int i = 0;
 bool fullWordRead = false;
+
 // only ever come here if we didn't go to sleep in setup - always usb connected
 void loop() {
   // read char by char, usually comes in two blocks
@@ -183,10 +199,12 @@ void loop() {
     if (configSaved) {
       pixels.setPixelColor(0, pixels.Color(0, 255, 0));
       pixels.show();
+      WebUSBSerial.write((uint8_t *)"success", strlen("success"));
+    } else {
+      WebUSBSerial.write((uint8_t *)"failure", strlen("failure"));
     }
 
     inputJson[0] = '\0';
-    WebUSBSerial.write((uint8_t *)"Success", strlen("Success"));
     fullWordRead = false;
   }
   // while (USBSerial.available()) {
