@@ -1,45 +1,43 @@
 #include "main.h"
 
 RTC_DATA_ATTR int recordCounter = 0;
-RTC_DATA_ATTR bme280record records[MAX_RTC_RECORDS];
+RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 
 #include <Adafruit_NeoPixel.h>  // go to Main Menu --> Sketch --> Include Library --> Manage libraries... search for Adafruit NeoPixel and install it (as of 4th February 2021 latest version is 1.7.0)
 #define PIN 18
 #define NUMPIXELS 1
-#define PERIOD  10  //ms
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-
-int R=255, G=0, B=0;
 
 WebUSB WebUSBSerial;
 CDCusb USBSerial;
 
-bool cdcConnected = false;
-int usbConnected = 0;
+volatile int usbConnected = 0;
+int maxRtcRecords = MAX_RTC_RECORDS;
+int sleepInMinutes = CFG_SLEEP_SECONDS / 60;
 
-class MyWebUSBCallbacks : public WebUSBCallbacks {
+class MyWebUSBCallbacks: public WebUSBCallbacks {
     void onConnect(bool state) {
       USBSerial.printf("webusb is %s\n", state ? "connected":"disconnected");
     }
 };
 
-class MyCDCUSBCallbacks : public CDCCallbacks {
-  // void onConnect(bool state) {
-  //   USBSerial.printf("cdc is %s\n", state ? "connected":"disconnected");
-  // }
-  // void onData() { 
-  //   USBSerial.printf("Received");
-  // }
+class MyCDCUSBCallbacks: public CDCCallbacks {
+  // when a serial monitor connects
+  bool onConnect(bool dtr, bool rts) {
+    USBSerial.printf("Connected");
+    // usbConnected = 1;
+    return true;
+  }
+  void onData() { 
+    USBSerial.printf("Received");
+    // usbConnected = 1;
+  }
   void onCodingChange(cdc_line_coding_t const* p_line_coding) { 
-    USBSerial.printf("Coding change");
+    USBSerial.printf("C:");
     usbConnected = 1;
   }
 };
-
-void waitForConfig() {
-  while (!configured);
-}
 
 void setup() {
   WiFi.mode(WIFI_MODE_NULL);
@@ -58,16 +56,29 @@ void setup() {
     USBSerial.println("Failed to start USB stack");
   }
 
-  return;
-
   #ifndef PRECONFIGURED
     setupEEPROM();
-    // clearConfig(); // uncomment when you want to programmatically clear config
+    if (isConfigSaved()) {
+      maxRtcRecords = readIntFromEEPROM("maxRtcRecords");
+      sleepInMinutes = readIntFromEEPROM("sleepInMinutes");
+    }
   #endif
-  while (!isConfigSaved());
+
+  // wait if usb connection appears - below 500 won't work
+  delay(500);
+  if (usbConnected) {
+    pixels.begin();
+    pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    pixels.show();
+    return; // don't do the measurement
+  }
+
+  if (!isConfigSaved()) {
+    goToSleep(sleepInMinutes*60);
+  };
 
   if (!setupbme280()) {
-    goToSleep();
+    goToSleep(sleepInMinutes*60);
   };
 
   ardprintf("Measurement %d starting", recordCounter);
@@ -75,7 +86,7 @@ void setup() {
   // make a sensor reading
   if (!makeMeasurement(&records[recordCounter])) {
     ardprintf("Failed to perform reading :(");
-    goToSleep();
+    goToSleep(sleepInMinutes*60);
     return;
   }
 
@@ -84,13 +95,13 @@ void setup() {
 
   if (recordCounter < MAX_RTC_RECORDS) {
     ardprintf("Going to sleep, next up is: %d", recordCounter);
-    goToSleep();
+    goToSleep(sleepInMinutes*60);
     return;
   }
   recordCounter = 0;
 
   if (!setupWiFi()) {
-    goToSleep();
+    goToSleep(sleepInMinutes*60);
   }
 
   char jsonPayload[900];
@@ -123,6 +134,9 @@ void setup() {
   "Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ\n" \
   "-----END CERTIFICATE-----\n";
   makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken, jsonPayload, NULL, "POST", ca_cert);
+
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
 }
 
 void echo_all(char c)
@@ -132,82 +146,50 @@ void echo_all(char c)
     USBSerial.write(c);
 }
 
+char inputJson[300] = "";
+int i = 0;
+bool fullWordRead = false;
+// only ever come here if we didn't go to sleep in setup - always usb connected
 void loop() {
-  
-  if (usbConnected) {
-    while (WebUSBSerial.available()) {
-        echo_all(WebUSBSerial.read());
+  // read char by char, usually comes in two blocks
+  while (WebUSBSerial.available()) {
+    char c = WebUSBSerial.read();
+
+    // stop character is 0, everything else is the input json
+    if (c != 0) {
+      inputJson[i] = c;
+      i++;
+    } else {
+      inputJson[i] = '\0';
+      i = 0;
+      fullWordRead = true;
+    }
+  }
+
+  if (fullWordRead) {
+    USBSerial.write((uint8_t *)inputJson, strlen(inputJson));
+    USBSerial.write('\n');
+
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, inputJson);
+    JsonObject obj = doc.as<JsonObject>();
+    bool configSaved = saveConfig(
+      obj["wifiSSID"], 
+      obj["wifiPassword"], 
+      obj["accessToken"],
+      obj["timeBetweenMeasurements"].as<uint8_t>(),
+      obj["maxRtcRecords"].as<uint8_t>()
+    );
+    if (configSaved) {
+      pixels.setPixelColor(0, pixels.Color(0, 255, 0));
+      pixels.show();
     }
 
-    while (Serial.available()) {
-        echo_all(Serial.read());
-    }
-
-    while (USBSerial.available()) {
-        echo_all(USBSerial.read());
-    }
+    inputJson[0] = '\0';
+    WebUSBSerial.write((uint8_t *)"Success", strlen("Success"));
+    fullWordRead = false;
   }
-
-  pixels.setPixelColor(0, pixels.Color(0, 255, 0));
-  pixels.show();
-  if (!usbConnected) {
-    return;
-  }
-
-  for (G=0; G<255; G++)
-  {
-    pixels.setPixelColor(0, pixels.Color(R, G, B));
-    pixels.show();
-    // delay (PERIOD);
-  }
-  
-  for (R=255; R>0; R--)
-  {
-    pixels.setPixelColor(0, pixels.Color(R, G, B));
-    pixels.show();
-    // delay (PERIOD);
-  }
-  
-  for (B=0; B<255; B++)
-  {
-    pixels.setPixelColor(0, pixels.Color(R, G, B));
-    pixels.show();
-    // delay (PERIOD);
-  }
-  
-  for (G=255; G>0; G--)
-  {
-    pixels.setPixelColor(0, pixels.Color(R, G, B));
-    pixels.show();
-    // delay (PERIOD);
-  }
-  
-  for (R=0; R<255; R++)
-  {
-    pixels.setPixelColor(0, pixels.Color(R, G, B));
-    pixels.show();
-    // delay (PERIOD);
-  }
-  
-  for (B=255; B>0; B--)
-  {
-    pixels.setPixelColor(0, pixels.Color(R, G, B));
-    pixels.show();
-    // delay (PERIOD);
-  }
-
-  return;
-  /* do nothing in loop except check button, 
-    esp will be in deep sleep in between measurements which will make setup re-run */
-
-  #ifndef PRECONFIGURED
-  if (checkButtonPressed()) {
-      // do not execute anything else when button is pressed
-    return;
-  }
-  #endif
-
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
-  goToSleep();
+  // while (USBSerial.available()) {
+  //     echo_all(USBSerial.read());
+  // }
 }
