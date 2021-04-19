@@ -1,6 +1,6 @@
 # sensor-dashboard-ESP-bme280-reader
 
-Sends periodic `bme280` humidity, temperature, gas, pressure and altitude data from `esp32s2 development board` to [sensor dashboard](http://iotfreezer.com) backend.
+Sends periodic `bme280` humidity, temperature, gas, pressure and altitude data from `esp32s2 development board` to [sensor dashboard](http://iotfreezer.com) backend. Is configurable via a web interface using webusb. Since the board uses native usb communication, the serial output will also be emulated via USB so it may not work as you would expect a regular serial connection - if it's configured wrongly, there will be no output in your serial monitor.
 
 Built with PlatformIO.
 
@@ -14,7 +14,7 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 3. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
 
 ## Components
-- ESP32S2 dev board
+- ESP32S2 dev board with native (!) usb support -> there needs to be no usb to serial converter on the board
 - Bosch BME280 sensor module
 - 3.7V LiPo battery (or other)
 
