@@ -152,6 +152,8 @@ void setup() {
   USBSerial.printf("API call HTTP code: %d", httpCode);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
+
+  sleep();
 }
 
 void echo_all(char c)
