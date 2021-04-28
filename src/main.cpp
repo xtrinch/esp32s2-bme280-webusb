@@ -82,7 +82,7 @@ void setup() {
     return; // don't do the measurement
   }
 
-  // TODO: remove
+  // TODO: comment out
   // delay(10000);
 
   if (!isConfigSaved()) {

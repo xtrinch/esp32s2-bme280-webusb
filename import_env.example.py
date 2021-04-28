@@ -10,10 +10,10 @@ env.Append(CPPDEFINES=[
 	("WIFI_PASSWORD", "pass"), # define only if preconfiguring
   ("ACCESS_TOKEN", "token"), # define only if preconfiguring
   ("I2C_ADDRESS", 0x76),
-  ("SPI_CS", 1),
-  ("SPI_MOSI", 2),
-  ("SPI_MISO", 3),
-  ("SPI_SCK", 4),
+  ("SPI_CS", 3), #  chip select - CSB on bme
+  ("SPI_MOSI", 2), # SCA on bme
+  ("SPI_MISO", 4), # SDO on bme
+  ("SPI_SCK", 1), # clock SCL on bme
   ("DEBUG", 1),
   ("PRECONFIGURED"), # turn preconfiguration on / off
 ])
