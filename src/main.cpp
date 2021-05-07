@@ -1,4 +1,5 @@
 #include "main.h"
+#include <Preferences.h>
 
 RTC_DATA_ATTR int recordCounter = 0;
 RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
@@ -10,7 +11,7 @@ RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 WebUSB WebUSBSerial;
-CDCusb USBSerial;
+Preferences preferences;
 
 volatile int usbConnected = 0;
 int maxRtcRecords = MAX_RTC_RECORDS;
@@ -45,7 +46,59 @@ void sleep() {
   }
 }
 
+bool isCfgSaved() {
+  preferences.begin("iotfreezer", true);
+  bool cfgSaved = preferences.getBool("cfg_saved");
+  preferences.end();
+  return cfgSaved;
+}
+
+bool saveCfg(
+  const char * ssid, 
+  const char * password, 
+  const char * sensorAccessToken,
+  uint8_t timeBetweenMeasurements, // min
+  uint8_t maxRtcRecords // how many records before they are sent to server
+) {
+  if (!ssid || strlen(ssid) == 0 || !password || strlen(password) == 0) {
+    ardprintf("Need SSID & password to save config");
+    return false;
+  }
+  
+  bool retVal = true;
+
+  preferences.begin("iotfreezer", false);
+
+  if (
+    !preferences.putString("ssid", ssid) ||
+    !preferences.putString("password", password) ||
+    !preferences.putString("access_token", sensorAccessToken) ||
+    !preferences.putInt("time_between", timeBetweenMeasurements) ||
+    !preferences.putInt("max_rtc_records", maxRtcRecords) ||
+    !preferences.putBool("cfg_saved", true)
+  ) {
+    USBSerial.printf("Could not save some config data to EEPROM");
+    retVal = false;
+  }
+
+  USBSerial.println("Values are:");
+
+  USBSerial.println(ssid);
+  USBSerial.println(preferences.getString("ssid", "Unknown"));
+  USBSerial.println(password);
+  USBSerial.println(preferences.getString("password", "Unknown"));
+
+  preferences.end();
+
+  return retVal;
+}
+
 void setup() {
+  Serial.begin(115200);
+  udpSerial.begin(115200);
+  Serial.setDebugOutput(true);
+  udpSerial.setDebugOutput(true);
+
   WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
   pixels.clear();
@@ -65,10 +118,12 @@ void setup() {
   }
 
   #ifndef PRECONFIGURED
-    setupEEPROM();
-    if (isConfigSaved()) {
-      maxRtcRecords = readIntFromEEPROM("max_rtc_records");
-      sleepInMinutes = readIntFromEEPROM("time_between_measurements");
+    // setupEEPROM();
+    if (isCfgSaved()) {
+      preferences.begin("iotfreezer", true);
+      maxRtcRecords = preferences.getInt("max_rtc_records");
+      sleepInMinutes = preferences.getInt("time_between");
+      preferences.end();
     }
   #endif
 
@@ -76,16 +131,22 @@ void setup() {
   delay(500);
   if (usbConnected) {
     ardprintf("USB connected!");
-    pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    if (isCfgSaved()) {
+      // green
+      pixels.setPixelColor(0, pixels.Color(0, 255, 0)); 
+    } else {
+      // red
+      pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    }
     pixels.show();
     // TODO: uncomment
-    return; // don't do the measurement
+    // return; // don't do the measurement
   }
 
   // TODO: comment out
-  // delay(10000);
+  delay(10000);
 
-  if (!isConfigSaved()) {
+  if (!isCfgSaved()) {
     USBSerial.println("No config saved :(");
     sleep();
   };
@@ -191,7 +252,7 @@ void loop() {
     DynamicJsonDocument doc(1024);
     deserializeJson(doc, inputJson);
     JsonObject obj = doc.as<JsonObject>();
-    bool configSaved = saveConfig(
+    bool configSaved = saveCfg(
       obj["wifiSSID"], 
       obj["wifiPassword"], 
       obj["accessToken"],
@@ -199,9 +260,15 @@ void loop() {
       obj["maxRtcRecords"].as<uint8_t>()
     );
     if (configSaved) {
-      pixels.setPixelColor(0, pixels.Color(0, 255, 0));
+      pixels.setPixelColor(0, pixels.Color(255, 165, 0));
       pixels.show();
       WebUSBSerial.write((uint8_t *)"success", strlen("success"));
+
+      if (!isCfgSaved()) {
+        USBSerial.println("No config saved :(");
+      } else {
+        USBSerial.println("Success saving config!");
+      }
     } else {
       WebUSBSerial.write((uint8_t *)"failure", strlen("failure"));
     }
@@ -209,7 +276,4 @@ void loop() {
     inputJson[0] = '\0';
     fullWordRead = false;
   }
-  // while (USBSerial.available()) {
-  //     echo_all(USBSerial.read());
-  // }
 }
