@@ -11,6 +11,7 @@ RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 WebUSB WebUSBSerial;
+CDCusb USBSerial;
 Preferences preferences;
 
 volatile int usbConnected = 0;
@@ -81,13 +82,6 @@ bool saveCfg(
     retVal = false;
   }
 
-  USBSerial.println("Values are:");
-
-  USBSerial.println(ssid);
-  USBSerial.println(preferences.getString("ssid", "Unknown"));
-  USBSerial.println(password);
-  USBSerial.println(preferences.getString("password", "Unknown"));
-
   preferences.end();
 
   return retVal;
@@ -95,9 +89,7 @@ bool saveCfg(
 
 void setup() {
   Serial.begin(115200);
-  udpSerial.begin(115200);
   Serial.setDebugOutput(true);
-  udpSerial.setDebugOutput(true);
 
   WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
@@ -118,7 +110,6 @@ void setup() {
   }
 
   #ifndef PRECONFIGURED
-    // setupEEPROM();
     if (isCfgSaved()) {
       preferences.begin("iotfreezer", true);
       maxRtcRecords = preferences.getInt("max_rtc_records");
@@ -130,7 +121,6 @@ void setup() {
   // wait if usb connection appears - below 500 won't work
   delay(500);
   if (usbConnected) {
-    ardprintf("USB connected!");
     if (isCfgSaved()) {
       // green
       pixels.setPixelColor(0, pixels.Color(0, 255, 0)); 
@@ -140,11 +130,11 @@ void setup() {
     }
     pixels.show();
     // TODO: uncomment
-    // return; // don't do the measurement
+    return; // don't do the measurement
   }
 
   // TODO: comment out
-  delay(10000);
+  // delay(5000);
 
   if (!isCfgSaved()) {
     USBSerial.println("No config saved :(");
@@ -217,13 +207,6 @@ void setup() {
   sleep();
 }
 
-void echo_all(char c)
-{
-    Serial.write(c);
-    WebUSBSerial.write(c);
-    USBSerial.write(c);
-}
-
 char inputJson[300] = "";
 int i = 0;
 bool fullWordRead = false;
@@ -263,12 +246,6 @@ void loop() {
       pixels.setPixelColor(0, pixels.Color(255, 165, 0));
       pixels.show();
       WebUSBSerial.write((uint8_t *)"success", strlen("success"));
-
-      if (!isCfgSaved()) {
-        USBSerial.println("No config saved :(");
-      } else {
-        USBSerial.println("Success saving config!");
-      }
     } else {
       WebUSBSerial.write((uint8_t *)"failure", strlen("failure"));
     }
