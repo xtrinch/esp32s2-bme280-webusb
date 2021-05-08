@@ -18,6 +18,21 @@ volatile int usbConnected = 0;
 int maxRtcRecords = MAX_RTC_RECORDS;
 int sleepInMinutes = CFG_SLEEP_SECONDS / 60;
 
+
+void ardprintf(const char *fmt, ...) {
+  #ifndef DEBUG
+  return;
+  #endif
+
+  char buf[128]; // resulting string limited to 128 chars
+  buf[127] = '\0';
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, 128, fmt, args);
+  va_end(args);
+  USBSerial.println(buf);
+}
+
 class MyWebUSBCallbacks: public WebUSBCallbacks {
     void onConnect(bool state) {
       USBSerial.printf("webusb is %s\n", state ? "connected":"disconnected");
@@ -237,9 +252,7 @@ void setup() {
   "-----END CERTIFICATE-----\n";
   int httpCode = makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken.c_str(), jsonPayload, NULL, "POST", ca_cert);
 
-  #ifdef DEBUG
-  USBSerial.printf("API call HTTP code: %d", httpCode);
-  #endif
+  ardprintf("API call HTTP code: %d", httpCode);
 
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
