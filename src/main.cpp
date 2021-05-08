@@ -7,6 +7,8 @@ RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 #include <Adafruit_NeoPixel.h>  // go to Main Menu --> Sketch --> Include Library --> Manage libraries... search for Adafruit NeoPixel and install it (as of 4th February 2021 latest version is 1.7.0)
 #define PIN 18
 #define NUMPIXELS 1
+#define PWR_SENS_PIN 7
+#define BAT_SENS_PIN 8
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -31,6 +33,7 @@ void ardprintf(const char *fmt, ...) {
   vsnprintf(buf, 128, fmt, args);
   va_end(args);
   USBSerial.println(buf);
+  Serial.println(buf);
 }
 
 class MyWebUSBCallbacks: public WebUSBCallbacks {
@@ -43,12 +46,10 @@ class MyCDCUSBCallbacks: public CDCCallbacks {
   // when a serial monitor connects
   bool onConnect(bool dtr, bool rts) {
     USBSerial.printf("Connected");
-    // usbConnected = 1;
     return true;
   }
   void onData() { 
     USBSerial.printf("Received");
-    // usbConnected = 1;
   }
   void onCodingChange(cdc_line_coding_t const* p_line_coding) { 
     USBSerial.printf("C:");
@@ -129,8 +130,19 @@ bool connectToWifi() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
+  int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
+  if (power > 800) {
+    // as an alternative, this could be used for usb connected status, but
+    // it would also fire when charging via a regular outlet
+    // usbConnected = 1;
+  }
+
+  double voltagePerNum = 3.3/8192.0;
+  double vBatMeasured = analogRead(BAT_SENS_PIN)*voltagePerNum;   // read the input pin, 8192 max
+  // double vBatMeasured = analogReadMilliVolts(BAT_SENS_PIN)/1000.0;
+  double vBat = (vBatMeasured * (470000+4700000)) / 470000.0;
+  double adcCalibrationValue = 0.85863545324;
+  vBat = vBat * adcCalibrationValue;
 
   WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
@@ -143,11 +155,11 @@ void setup() {
   USBSerial.setCallbacks(new MyCDCUSBCallbacks());
 
   if(!WebUSBSerial.begin()) {
-    USBSerial.println("Failed to start webUSB stack");
+    ardprintf("Failed to start webUSB stack");
   }
 
   if(!USBSerial.begin()) {
-    USBSerial.println("Failed to start USB stack");
+    ardprintf("Failed to start USB stack");
   }
 
   if (isCfgSaved()) {
@@ -169,65 +181,52 @@ void setup() {
     }
     pixels.show();
     // TODO: uncomment
-    // return; // don't do the measurement
+    return; // don't do the measurement
   }
 
   // TODO: comment out
   // delay(5000);
 
   if (!isCfgSaved()) {
-    USBSerial.println("No config saved :(");
+    ardprintf("No config saved :(");
     sleep();
   };
 
   if (!setupbme280()) {
-    USBSerial.println("BME setup is falsch :(");
+    ardprintf("BME setup is falsch :(");
     sleep();
   };
 
-  #ifdef DEBUG
-  USBSerial.printf("Measurement %d starting", recordCounter);
-  #endif 
+  ardprintf("Measurement %d starting", recordCounter);
 
   // make a sensor reading
   if (!makeMeasurement(&records[recordCounter])) {
-    USBSerial.printf("Failed to perform reading :(");
+    ardprintf("Failed to perform reading :(");
     sleep();
     return;
   }
 
-  USBSerial.printf("Measurement %d done", recordCounter);
+  ardprintf("Measurement %d done", recordCounter);
   recordCounter++;
 
   if (recordCounter < maxRtcRecords) {
-    USBSerial.printf("Going to sleep, next up is: %d", recordCounter);
+    ardprintf("Going to sleep, next up is: %d", recordCounter);
     sleep();
     return;
   }
   recordCounter = 0;
 
   if (!connectToWifi()) {
-    USBSerial.printf("Wi-fi connection failed");
+    ardprintf("Wi-fi connection failed");
     sleep();
   }
 
   char jsonPayload[900];
   getJsonPayload(jsonPayload, records);
 
-  #ifdef DEBUG
-    USBSerial.println("Payload to send:");
-    USBSerial.println(jsonPayload);
-  #endif
-
   preferences.begin("iotfreezer", true);
   String accessToken = preferences.getString("access_token");
   preferences.end();
-
-  #ifdef DEBUG
-    USBSerial.println("Access token:");
-    USBSerial.println(accessToken);
-  #endif
-
 
   const char* ca_cert = \
   "-----BEGIN CERTIFICATE-----\n" \
@@ -257,6 +256,9 @@ void setup() {
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 
+
+  ardprintf("Measured battery voltage is %f", vBat);
+  ardprintf("Bat sens raw is: %d", analogRead(BAT_SENS_PIN));
   sleep();
 }
 
@@ -296,8 +298,8 @@ void loop() {
       obj["maxRtcRecords"].as<uint8_t>()
     );
     if (configSaved) {
-      // green
-      pixels.setPixelColor(0, pixels.Color(0, 255, 0));
+      // blue, so we know we've configured it even if it was already configured
+      pixels.setPixelColor(0, pixels.Color(0, 0, 255));
       pixels.show();
       WebUSBSerial.write((uint8_t *)"success", strlen("success"));
     } else {
