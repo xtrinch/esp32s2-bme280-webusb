@@ -87,6 +87,32 @@ bool saveCfg(
   return retVal;
 }
 
+
+bool connectToWifi() {
+  int wifiRetriesLeft = WIFI_CONNECT_RETRIES;
+
+  preferences.begin("iotfreezer", true);
+  String ssid = preferences.getString("ssid");
+  String password = preferences.getString("password");
+  preferences.end();
+
+  WiFi.begin(ssid.c_str(), password.c_str());
+
+  while (WiFi.status() != WL_CONNECTED && wifiRetriesLeft > 0) {
+    delay(100);
+    wifiRetriesLeft -= 1;
+  }
+
+  if (wifiRetriesLeft <= 0 || WiFi.status() != WL_CONNECTED) {
+    USBSerial.println("Station: Could not connect to WiFi.");
+    return false;
+  }
+  
+  USBSerial.println("Station: Connected to WiFi");
+
+  return true;
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
@@ -109,14 +135,12 @@ void setup() {
     USBSerial.println("Failed to start USB stack");
   }
 
-  #ifndef PRECONFIGURED
-    if (isCfgSaved()) {
-      preferences.begin("iotfreezer", true);
-      maxRtcRecords = preferences.getInt("max_rtc_records");
-      sleepInMinutes = preferences.getInt("time_between");
-      preferences.end();
-    }
-  #endif
+  if (isCfgSaved()) {
+    preferences.begin("iotfreezer", true);
+    maxRtcRecords = preferences.getInt("max_rtc_records");
+    sleepInMinutes = preferences.getInt("time_between");
+    preferences.end();
+  }
 
   // wait if usb connection appears - below 500 won't work
   delay(500);
@@ -130,7 +154,7 @@ void setup() {
     }
     pixels.show();
     // TODO: uncomment
-    return; // don't do the measurement
+    // return; // don't do the measurement
   }
 
   // TODO: comment out
@@ -146,7 +170,9 @@ void setup() {
     sleep();
   };
 
+  #ifdef DEBUG
   USBSerial.printf("Measurement %d starting", recordCounter);
+  #endif 
 
   // make a sensor reading
   if (!makeMeasurement(&records[recordCounter])) {
@@ -165,17 +191,28 @@ void setup() {
   }
   recordCounter = 0;
 
-  if (!setupWiFi()) {
+  if (!connectToWifi()) {
+    USBSerial.printf("Wi-fi connection failed");
     sleep();
   }
 
   char jsonPayload[900];
   getJsonPayload(jsonPayload, records);
 
-  char accessToken[60] = CFG_ACCESS_TOKEN;
-  #ifndef PRECONFIGURED
-  readFromEEPROM(accessToken, "access_token");
+  #ifdef DEBUG
+    USBSerial.println("Payload to send:");
+    USBSerial.println(jsonPayload);
   #endif
+
+  preferences.begin("iotfreezer", true);
+  String accessToken = preferences.getString("access_token");
+  preferences.end();
+
+  #ifdef DEBUG
+    USBSerial.println("Access token:");
+    USBSerial.println(accessToken);
+  #endif
+
 
   const char* ca_cert = \
   "-----BEGIN CERTIFICATE-----\n" \
@@ -198,9 +235,12 @@ void setup() {
   "JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo\n" \
   "Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ\n" \
   "-----END CERTIFICATE-----\n";
-  int httpCode = makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken, jsonPayload, NULL, "POST", ca_cert);
+  int httpCode = makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken.c_str(), jsonPayload, NULL, "POST", ca_cert);
 
+  #ifdef DEBUG
   USBSerial.printf("API call HTTP code: %d", httpCode);
+  #endif
+
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 
@@ -243,7 +283,8 @@ void loop() {
       obj["maxRtcRecords"].as<uint8_t>()
     );
     if (configSaved) {
-      pixels.setPixelColor(0, pixels.Color(255, 165, 0));
+      // green
+      pixels.setPixelColor(0, pixels.Color(0, 255, 0));
       pixels.show();
       WebUSBSerial.write((uint8_t *)"success", strlen("success"));
     } else {
