@@ -41,18 +41,23 @@ bool getJsonPayload(char *buf, bme280record records[]) {
   JsonArray measurements = doc.createNestedArray("measurements");
 
   for (int i=0; i<maxRtcRecords; i++) {
+    int timeAgo = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
     JsonObject measurement = measurements.createNestedObject();
     measurement["measurement"] = records[i].temp;
     measurement["measurementType"] = "temperature";
-    measurement["timeAgo"] = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
+    measurement["timeAgo"] = timeAgo;
     JsonObject measurement1 = measurements.createNestedObject();
     measurement1["measurement"] = records[i].humidity;
     measurement1["measurementType"] = "humidity";
-    measurement1["timeAgo"] = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
+    measurement1["timeAgo"] = timeAgo;
     JsonObject measurement2 = measurements.createNestedObject();
     measurement2["measurement"] = records[i].pressure;
     measurement2["measurementType"] = "pressure";
-    measurement2["timeAgo"] = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
+    measurement2["timeAgo"] = timeAgo;
+    JsonObject measurement3 = measurements.createNestedObject();
+    measurement3["measurement"] = records[i].battery;
+    measurement3["measurementType"] = "battery-voltage";
+    measurement3["timeAgo"] = timeAgo;
   }
 
   serializeJson(doc, (void *)buf, 900);

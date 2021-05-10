@@ -187,6 +187,9 @@ void setup() {
   // TODO: comment out
   // delay(5000);
 
+  ardprintf("Measured battery voltage is %f", vBat);
+  records[recordCounter].battery = vBat;
+  
   if (!isCfgSaved()) {
     ardprintf("No config saved :(");
     sleep();
@@ -256,9 +259,6 @@ void setup() {
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 
-
-  ardprintf("Measured battery voltage is %f", vBat);
-  ardprintf("Bat sens raw is: %d", analogRead(BAT_SENS_PIN));
   sleep();
 }
 
