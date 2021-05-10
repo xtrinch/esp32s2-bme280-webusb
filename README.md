@@ -16,13 +16,12 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 
 ## Setup
 
-0. Make sure to clone with `git clone --recursive REPO-URL` to make sure ESP-make-easy submodule is cloned along (if you forget the recursive flag, you can always run `git submodule update --init --recursive` in the root directory later)
 1. Have a sensor dashboard backend running (see https://github.com/xtrinch/sensor-dashboard-nestjs-backend) or use [iotfreezer](http://iotfreezer.com/).
 2. Copy `import_env.example.py` to `import_env.py` and define your sensor dashboard url.
 3. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
 
 ## Components
-- ESP32S2 dev board with native (!) usb support -> there needs to be no usb to serial converter on the board
+- ESP32S2 dev board with native (!) usb support -> there should not be a usb to serial converter on the board
 - Bosch BME280 sensor module
 - 3.7V LiPo battery (or other)
 

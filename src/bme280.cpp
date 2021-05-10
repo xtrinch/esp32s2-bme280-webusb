@@ -34,7 +34,7 @@ bool makeMeasurement(bme280record * record) {
 }
 
 bool getJsonPayload(char *buf, bme280record records[]) {
-  StaticJsonDocument<1200> doc; // <- 1040 bytes in the heap for 4*4 measurements (maxRtcRecords= 4)
+  StaticJsonDocument<1500> doc; // <- 1040 bytes in the heap for 4*4 measurements (maxRtcRecords= 4)
 
   JsonArray measurements = doc.createNestedArray("measurements");
 
@@ -58,7 +58,7 @@ bool getJsonPayload(char *buf, bme280record records[]) {
     measurement3["timeAgo"] = timeAgo;
   }
 
-  serializeJson(doc, (void *)buf, 1000);
-  Serial.print(buf);
+  serializeJson(doc, (void *)buf, 1100);
+  ardprintf(buf);
   return true;
 }

@@ -1,5 +1,4 @@
 #include "main.h"
-#include <Preferences.h>
 
 RTC_DATA_ATTR int recordCounter = 0;
 RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
@@ -22,21 +21,6 @@ volatile int usbConnected = 0;
 // if there's no user configuration anyway
 int maxRtcRecords = 1; // always send
 int sleepInMinutes = 1; // send once per minute
-
-void ardprintf(const char *fmt, ...) {
-  #ifndef DEBUG
-  return;
-  #endif
-
-  char buf[128]; // resulting string limited to 128 chars
-  buf[127] = '\0';
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, 128, fmt, args);
-  va_end(args);
-  USBSerial.println(buf);
-  // Serial.println(buf);
-}
 
 class MyWebUSBCallbacks: public WebUSBCallbacks {
     void onConnect(bool state) {
@@ -72,77 +56,24 @@ bool isCfgSaved() {
   return cfgSaved;
 }
 
-bool saveCfg(
-  const char * ssid, 
-  const char * password, 
-  const char * sensorAccessToken,
-  uint8_t timeBetweenMeasurements, // min
-  uint8_t maxRtcRecords // how many records before they are sent to server
-) {
-  if (!ssid || strlen(ssid) == 0 || !password || strlen(password) == 0) {
-    ardprintf("Need SSID & password to save config");
-    return false;
-  }
-  
-  ardprintf("Saving ssid: %s", ssid);
-  ardprintf("Saving password: %s", password);
-  ardprintf("Saving access_token: %s", sensorAccessToken);
-  ardprintf("Saving time_between: %d", timeBetweenMeasurements);
-  ardprintf("Saving max_rtc_records: %d", maxRtcRecords);
-
-  bool retVal = true;
-
-  preferences.begin("iotfreezer", false);
-
-  if (
-    !preferences.putString("ssid", ssid) ||
-    !preferences.putString("password", password) ||
-    !preferences.putString("access_token", sensorAccessToken) ||
-    !preferences.putInt("time_between", timeBetweenMeasurements) ||
-    !preferences.putInt("max_rtc_records", maxRtcRecords) ||
-    !preferences.putBool("cfg_saved", true)
-  ) {
-    ardprintf("Could not save some config data to preferences");
-    retVal = false;
-  }
-
-  preferences.end();
-
-  return retVal;
-}
-
-
-bool connectToWifi() {
-  int wifiRetriesLeft = WIFI_CONNECT_RETRIES;
-
-  preferences.begin("iotfreezer", true);
-  String ssid = preferences.getString("ssid");
-  String password = preferences.getString("password");
-  preferences.end();
-
-  WiFi.begin(ssid.c_str(), password.c_str());
-
-  while (WiFi.status() != WL_CONNECTED && wifiRetriesLeft > 0) {
-    delay(100);
-    wifiRetriesLeft -= 1;
-  }
-
-  if (wifiRetriesLeft <= 0 || WiFi.status() != WL_CONNECTED) {
-    USBSerial.println("Station: Could not connect to WiFi.");
-    return false;
-  }
-  
-  USBSerial.println("Station: Connected to WiFi");
-
-  return true;
-}
-
 void setup() {
+    ///////
+  Serial.begin(115200);
+  saveCfg("T-2_00a439", "INNBOX2942001014", "ae789041-9ab6-4287-8681-50ffc86bc90b", 1, 4);
+  if (isCfgSaved()) {
+    preferences.begin("iotfreezer", true);
+    maxRtcRecords = preferences.getInt("max_rtc_records");
+    sleepInMinutes = preferences.getInt("time_between");
+    preferences.end();
+  }
+  ///////
+
   int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
+  bool connectedToPower = false;
   if (power > 800) {
     // as an alternative, this could be used for usb connected status, but
     // it would also fire when charging via a regular outlet
-    // usbConnected = 1;
+    connectedToPower = true;
   }
 
   double voltagePerNum = 3.3/8192.0;
@@ -160,6 +91,7 @@ void setup() {
   WebUSBSerial.landingPageURI("iotfreezer.com", false);
   WebUSBSerial.deviceID(0x2341, 0x0002);
   WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
+
   USBSerial.setCallbacks(new MyCDCUSBCallbacks());
 
   if(!WebUSBSerial.begin()) {
@@ -180,18 +112,21 @@ void setup() {
   }
 
   // wait if usb connection appears - below 500 won't work
-  delay(500);
-  if (usbConnected) {
-    if (isCfgSaved()) {
-      // green
-      pixels.setPixelColor(0, pixels.Color(0, 255, 0)); 
-    } else {
-      // red
-      pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+  if (connectedToPower) {
+    delay(500);
+
+    if (usbConnected) {
+      if (isCfgSaved()) {
+        // green
+        pixels.setPixelColor(0, pixels.Color(0, 255, 0)); 
+      } else {
+        // red
+        pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+      }
+      pixels.show();
+      // TODO: uncomment
+      return; // don't do the measurement
     }
-    pixels.show();
-    // TODO: uncomment
-    return; // don't do the measurement
   }
 
   // TODO: comment out
@@ -234,11 +169,12 @@ void setup() {
     sleep();
   }
 
-  char jsonPayload[900];
+  char jsonPayload[1100];
   getJsonPayload(jsonPayload, records);
 
   preferences.begin("iotfreezer", true);
   String accessToken = preferences.getString("access_token");
+  ardprintf("Read access token: %s", accessToken.c_str());
   preferences.end();
 
   const char* ca_cert = \
@@ -319,4 +255,43 @@ void loop() {
     inputJson[0] = '\0';
     fullWordRead = false;
   }
+}
+
+bool saveCfg(
+  const char * ssid, 
+  const char * password, 
+  const char * sensorAccessToken,
+  uint8_t timeBetweenMeasurements, // min
+  uint8_t maxRtcRecords // how many records before they are sent to server
+) {
+  if (!ssid || strlen(ssid) == 0 || !password || strlen(password) == 0) {
+    ardprintf("Need SSID & password to save config");
+    return false;
+  }
+  
+  ardprintf("Saving ssid: %s", ssid);
+  ardprintf("Saving password: %s", password);
+  ardprintf("Saving access_token: %s", sensorAccessToken);
+  ardprintf("Saving time_between: %d", timeBetweenMeasurements);
+  ardprintf("Saving max_rtc_records: %d", maxRtcRecords);
+
+  bool retVal = true;
+
+  preferences.begin("iotfreezer", false);
+
+  if (
+    !preferences.putString("ssid", ssid) ||
+    !preferences.putString("password", password) ||
+    !preferences.putString("access_token", sensorAccessToken) ||
+    !preferences.putInt("time_between", timeBetweenMeasurements) ||
+    !preferences.putInt("max_rtc_records", maxRtcRecords) ||
+    !preferences.putBool("cfg_saved", true)
+  ) {
+    ardprintf("Could not save some config data to preferences");
+    retVal = false;
+  }
+
+  preferences.end();
+
+  return retVal;
 }
