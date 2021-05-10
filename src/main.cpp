@@ -141,7 +141,7 @@ void setup() {
   double vBatMeasured = analogRead(BAT_SENS_PIN)*voltagePerNum;   // read the input pin, 8192 max
   // double vBatMeasured = analogReadMilliVolts(BAT_SENS_PIN)/1000.0;
   double vBat = (vBatMeasured * (470000+4700000)) / 470000.0;
-  double adcCalibrationValue = 0.85863545324;
+  double adcCalibrationValue = 0.895;
   vBat = vBat * adcCalibrationValue;
 
   WiFi.mode(WIFI_MODE_NULL);
@@ -189,7 +189,7 @@ void setup() {
 
   ardprintf("Measured battery voltage is %f", vBat);
   records[recordCounter].battery = vBat;
-  
+
   if (!isCfgSaved()) {
     ardprintf("No config saved :(");
     sleep();
