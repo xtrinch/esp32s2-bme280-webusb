@@ -57,17 +57,6 @@ bool isCfgSaved() {
 }
 
 void setup() {
-    ///////
-  Serial.begin(115200);
-  saveCfg("T-2_00a439", "INNBOX2942001014", "ae789041-9ab6-4287-8681-50ffc86bc90b", 1, 4);
-  if (isCfgSaved()) {
-    preferences.begin("iotfreezer", true);
-    maxRtcRecords = preferences.getInt("max_rtc_records");
-    sleepInMinutes = preferences.getInt("time_between");
-    preferences.end();
-  }
-  ///////
-
   int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
   bool connectedToPower = false;
   if (power > 800) {
@@ -169,7 +158,8 @@ void setup() {
     sleep();
   }
 
-  char jsonPayload[1100];
+  // around 1150 should be enough for max rtc records = 4
+  char jsonPayload[1500];
   getJsonPayload(jsonPayload, records);
 
   preferences.begin("iotfreezer", true);
