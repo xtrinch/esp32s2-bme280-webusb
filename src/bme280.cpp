@@ -6,7 +6,7 @@ Adafruit_Sensor *bme_pressure = bme.getPressureSensor();
 Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 
 bool setupbme280() {
-  if (!bme.begin(CFG_I2C_ADDRESS)) {
+  if (!bme.begin()) {
     ardprintf("bme280: Could not find a valid bme280 sensor, check wiring!");
     return false;
   }
@@ -14,11 +14,9 @@ bool setupbme280() {
   // forced mode - need to force measurement, so that we hopefully save some power
   bme.setSampling(Adafruit_BME280::MODE_FORCED);
 
-  // #ifdef DEBUG
   // bme_temp->printSensorDetails();
   // bme_pressure->printSensorDetails();
   // bme_humidity->printSensorDetails();
-  // #endif
   
   return true;
 }
@@ -36,12 +34,12 @@ bool makeMeasurement(bme280record * record) {
 }
 
 bool getJsonPayload(char *buf, bme280record records[]) {
-  StaticJsonDocument<1000> doc; // <- 1000 bytes in the heap
+  StaticJsonDocument<1200> doc; // <- 1040 bytes in the heap for 4*4 measurements (maxRtcRecords= 4)
 
   JsonArray measurements = doc.createNestedArray("measurements");
 
   for (int i=0; i<maxRtcRecords; i++) {
-    int timeAgo = (maxRtcRecords - i - 1) * SLEEP_SECONDS;
+    int timeAgo = (maxRtcRecords - i - 1) * (sleepInMinutes*60);
     JsonObject measurement = measurements.createNestedObject();
     measurement["measurement"] = records[i].temp;
     measurement["measurementType"] = "temperature";
@@ -60,7 +58,7 @@ bool getJsonPayload(char *buf, bme280record records[]) {
     measurement3["timeAgo"] = timeAgo;
   }
 
-  serializeJson(doc, (void *)buf, 900);
+  serializeJson(doc, (void *)buf, 1000);
   Serial.print(buf);
   return true;
 }

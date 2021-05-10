@@ -12,10 +12,8 @@
 #include <webusb.h>
 #include <cdcusb.h>
 
-#define MAX_RTC_RECORDS 4
-
 extern CDCusb USBSerial;
 extern int maxRtcRecords;
-
+extern int sleepInMinutes;
 
 #endif

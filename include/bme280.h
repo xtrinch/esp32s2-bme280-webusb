@@ -6,7 +6,6 @@
 #include "main.h"
 
 #define SEALEVELPRESSURE_HPA (1013.25)
-#define CFG_I2C_ADDRESS I2C_ADDRESS
 
 typedef struct bme280record {
   float temp;

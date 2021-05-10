@@ -17,9 +17,11 @@ CDCusb USBSerial;
 Preferences preferences;
 
 volatile int usbConnected = 0;
-int maxRtcRecords = MAX_RTC_RECORDS;
-int sleepInMinutes = CFG_SLEEP_SECONDS / 60;
 
+// in-sane defaults, which shouldn't be used
+// if there's no user configuration anyway
+int maxRtcRecords = 1; // always send
+int sleepInMinutes = 1; // send once per minute
 
 void ardprintf(const char *fmt, ...) {
   #ifndef DEBUG
@@ -33,26 +35,26 @@ void ardprintf(const char *fmt, ...) {
   vsnprintf(buf, 128, fmt, args);
   va_end(args);
   USBSerial.println(buf);
-  Serial.println(buf);
+  // Serial.println(buf);
 }
 
 class MyWebUSBCallbacks: public WebUSBCallbacks {
     void onConnect(bool state) {
-      USBSerial.printf("webusb is %s\n", state ? "connected":"disconnected");
+      ardprintf("webusb is %s\n", state ? "connected":"disconnected");
     }
 };
 
 class MyCDCUSBCallbacks: public CDCCallbacks {
   // when a serial monitor connects
   bool onConnect(bool dtr, bool rts) {
-    USBSerial.printf("Connected");
+    ardprintf("Connected");
     return true;
   }
   void onData() { 
-    USBSerial.printf("Received");
+    ardprintf("Received");
   }
   void onCodingChange(cdc_line_coding_t const* p_line_coding) { 
-    USBSerial.printf("C:");
+    ardprintf("C:");
     usbConnected = 1;
   }
 };
@@ -82,6 +84,12 @@ bool saveCfg(
     return false;
   }
   
+  ardprintf("Saving ssid: %s", ssid);
+  ardprintf("Saving password: %s", password);
+  ardprintf("Saving access_token: %s", sensorAccessToken);
+  ardprintf("Saving time_between: %d", timeBetweenMeasurements);
+  ardprintf("Saving max_rtc_records: %d", maxRtcRecords);
+
   bool retVal = true;
 
   preferences.begin("iotfreezer", false);
@@ -94,7 +102,7 @@ bool saveCfg(
     !preferences.putInt("max_rtc_records", maxRtcRecords) ||
     !preferences.putBool("cfg_saved", true)
   ) {
-    USBSerial.printf("Could not save some config data to EEPROM");
+    ardprintf("Could not save some config data to preferences");
     retVal = false;
   }
 
@@ -166,6 +174,8 @@ void setup() {
     preferences.begin("iotfreezer", true);
     maxRtcRecords = preferences.getInt("max_rtc_records");
     sleepInMinutes = preferences.getInt("time_between");
+    ardprintf("Read max_rtc_records: %d", maxRtcRecords);
+    ardprintf("Read time_between: %d", sleepInMinutes);
     preferences.end();
   }
 
@@ -188,7 +198,7 @@ void setup() {
   // delay(5000);
 
   ardprintf("Measured battery voltage is %f", vBat);
-  records[recordCounter].battery = vBat;
+  records[recordCounter].battery = (float)vBat;
 
   if (!isCfgSaved()) {
     ardprintf("No config saved :(");
