@@ -119,7 +119,7 @@ void setup() {
   }
 
   while(true) {
-    setupDisplay();
+    draw();
     delay(3000);
   }
 
