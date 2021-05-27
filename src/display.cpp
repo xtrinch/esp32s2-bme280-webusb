@@ -10,9 +10,11 @@ void setupDisplay() {
   display.display(false);
 }
 
+int randomNumber = 0;
+
 void draw()
 {
-  display.setPartialWindow(0,0,display.width(),display.height());
+  display.setPartialWindow(0, 0, display.width(), display.height());
 
   // comment out next line to have no or minimal Adafruit_GFX code
   // display.setPartialWindow(0, 0, display.width(), display.height());
@@ -25,13 +27,13 @@ void draw()
   // {
     display.fillScreen(GxEPD_WHITE);
     // comment out next line to have no or minimal Adafruit_GFX code
-    display.print("My name is boxxy.");
+    display.printf("My name is boxxy. %d", randomNumber);
   // }
   // while (display.nextPage());
   display.display(true); // full update
 
-  delay(300);
   display.powerOff();
   Serial.println("Update finished");
   delay(5000);
+  randomNumber ++;
 }
