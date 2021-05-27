@@ -7,6 +7,7 @@
 #include <webusb.h>
 
 #include "common.h"
+#include "display.h"
 
 extern int maxRtcRecords;
 extern int sleepInMinutes;

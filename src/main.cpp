@@ -118,6 +118,11 @@ void setup() {
     }
   }
 
+  while(true) {
+    setupDisplay();
+    delay(3000);
+  }
+
   // TODO: comment out
   // delay(5000);
 
