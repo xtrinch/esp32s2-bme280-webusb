@@ -16,8 +16,6 @@ void draw()
 {
   display.setPartialWindow(0, 0, display.width(), display.height());
 
-  // comment out next line to have no or minimal Adafruit_GFX code
-  // display.setPartialWindow(0, 0, display.width(), display.height());
   display.clearScreen();
   display.setTextColor(GxEPD_BLACK);
   display.setTextSize(3);
