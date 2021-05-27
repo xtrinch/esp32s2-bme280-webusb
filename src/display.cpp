@@ -9,6 +9,7 @@ void draw()
 {
   display.init();
   // comment out next line to have no or minimal Adafruit_GFX code
+  // display.setPartialWindow(0, 0, display.width(), display.height());
   display.setTextColor(GxEPD_BLACK);
   display.setTextSize(3);
   display.setCursor(0,0);
@@ -17,9 +18,9 @@ void draw()
   {
     display.fillScreen(GxEPD_WHITE);
     // comment out next line to have no or minimal Adafruit_GFX code
-    display.print("Hello World!");
+    display.print("My name is boxxy.");
   }
   while (display.nextPage());
-
+  display.powerOff();
   delay(5000);
 }
