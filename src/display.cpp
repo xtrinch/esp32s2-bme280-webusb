@@ -9,21 +9,21 @@
 #include <GxIO/GxIO.h>
 
 // constructor for AVR Arduino, copy from GxEPD_Example else
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
-GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
+GxIO_Class io(SPI, /*CS=*/ CS_PIN, /*DC=*/ DC_PIN, /*RST=*/ RST_PIN); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
+GxEPD_Class display(io, /*RST=*/ RST_PIN, /*BUSY=*/ BUSY_PIN); // default selection of (9), 7
 
 void drawHelloWorld();
 
-void setupDisplay()
+void draw()
 {
   display.init();
-  display.eraseDisplay();
-  // comment out next line to have no or minimal Adafruit_GFX code
-  display.drawPaged(drawHelloWorld); // version for AVR using paged drawing, works also on other processors
-}
-
-void drawHelloWorld()
-{
+  display.setRotation(0);
+  display.setCursor(0,0);
   display.setTextColor(GxEPD_BLACK);
-  display.print("Hello World!");
+  display.setTextSize(3);
+  display.print("Moitsa Roikho");
+  // display.update();
+  display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);
+  delay(600);
+  display.powerDown();
 }

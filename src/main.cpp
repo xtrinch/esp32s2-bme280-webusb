@@ -57,6 +57,11 @@ bool isCfgSaved() {
 }
 
 void setup() {
+  Serial.begin(115200);
+  while(!Serial);
+  Serial.println("Why does this not work");
+  Serial.println("Why does this not work1");
+
   int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
   bool connectedToPower = false;
   if (power > 800) {
@@ -119,8 +124,8 @@ void setup() {
   }
 
   while(true) {
-    setupDisplay();
-    delay(3000);
+    draw();
+    delay(5000);
   }
 
   // TODO: comment out
