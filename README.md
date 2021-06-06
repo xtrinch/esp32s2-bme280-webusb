@@ -28,3 +28,9 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 ## Troubleshooting
 
 If you cannot upload to your board on linux, input `sudo chmod a+rw /dev/ttyUSB0`.
+
+
+##
+
+ `convert temperature-2-48.png -background white -alpha remove -alpha off -compress none -depth 24 -resize 48x48 temp-final.bmp`
+

@@ -3,7 +3,8 @@
 
 #include <GxEPD2_BW.h>
 #include <GxEPD2_3C.h>
-#include <Fonts/FreeMonoBold9pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
+#include <Fonts/FreeMonoBold12pt7b.h>
 #include "GxEPD2_display_selection_new_style.h"
 #include "bitmaps/Bitmaps200x200.h" // 1.54" b/w
 
@@ -71,8 +72,10 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
     return;
   }
   // Parse BMP header
-  if (read16(file) == 0x4D42) // BMP signature
+  uint16_t signature = read16(file);
+  if (signature == 0x4D42) // BMP signature
   {
+    Serial.println("Read BMP signature");
     uint32_t fileSize = read32(file);
     uint32_t creatorBytes = read32(file);
     uint32_t imageOffset = read32(file); // Start of image data
@@ -82,6 +85,8 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
     uint16_t planes = read16(file);
     uint16_t depth = read16(file); // bits per pixel
     uint32_t format = read32(file);
+    Serial.println("Format");
+    Serial.println(format);
     if ((planes == 1) && ((format == 0) || (format == 3))) // uncompressed is handled, 565 also
     {
       Serial.print("File size: "); Serial.println(fileSize);
@@ -131,7 +136,7 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
             color_palette_buffer[pn / 8] |= colored << pn % 8;
           }
         }
-        display.clearScreen();
+        // display.clearScreen();
         uint32_t rowPosition = flip ? imageOffset + (height - h) * rowSize : imageOffset;
         for (uint16_t row = 0; row < h; row++, rowPosition += rowSize) // for each line
         {
@@ -220,12 +225,16 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
             }
           } // end pixel
           uint16_t yrow = y + (flip ? h - row - 1 : row);
-          display.writeImage(output_row_mono_buffer, output_row_color_buffer, x, yrow, w, 1);
+          // display.drawBitmap(output_row_mono_buffer, output_row_color_buffer, x, yrow, w, 1);
+          display.drawBitmap(x, yrow, output_row_mono_buffer, w, 1, GxEPD_WHITE, GxEPD_BLACK);
         } // end line
         Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
-        display.refresh();
+        // display.refresh();
       }
     }
+  } else {
+    Serial.println("First line is weird");
+    Serial.println(signature);
   }
   file.close();
   if (!valid)
@@ -234,32 +243,36 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
   }
 }
 
-
-void drawBitmap() {
-  int16_t x = (display.width()) / 2;
-  int16_t y = (display.height()) / 2;
-  drawBitmapFromSpiffs("marilyn_240x240x8.bmp", x-100, y-160);
-}
-
 void draw()
 {
-  // display.setPartialWindow(0, 0, display.width(), display.height());
+  display.setPartialWindow(0, 0, display.width(), display.height());
+  display.setTextColor(GxEPD_BLACK);
+  display.setFont(&FreeMonoBold24pt7b);
+  display.setTextSize(1);
 
-  // display.clearScreen();
+  display.clearScreen();
+  display.firstPage(); // seems to be necessary
 
-  drawBitmap();
+  drawBitmapFromSpiffs("thermometer.bmp", 4, 55);
+  display.setCursor(75,99);
+  display.printf("%.1f", 24.5);
 
-  // display.setTextColor(GxEPD_BLACK);
-  // display.setTextSize(3);
-  // display.setCursor(0,0);
-  // display.firstPage();
-  // display.fillScreen(GxEPD_WHITE);
-  // display.printf("My name is boxxy. %d", randomNumber);
+  drawBitmapFromSpiffs("humidity.bmp", 0, 129);
+  display.setCursor(75,178);
+  display.printf("%.0f", 30.0);
 
-  // display.display(true); // partial update
+  display.setFont(&FreeMonoBold12pt7b);
+  display.setTextSize(1);
+  display.setCursor(0,15);
+  display.printf("Last update:");
+  display.setCursor(0,37);
+  display.printf("01/02/2021");
 
-  // display.powerOff();
+  // display.refresh(); // full update
+  display.display(true); // partial update
+
+  display.powerOff();
   Serial.println("Update finished");
-  delay(5000);
+  delay(20000);
   randomNumber ++;
 }
