@@ -67,15 +67,26 @@ static void check_efuse(void)
   }
 }
 
+#define REF_VOLTAGE 1130
+
+const uint8_t TMP_PIN = 33;
+esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
+
+
 void setup() {
-  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_16);
-  // if (status == ESP_OK) {
-  //   printf("v_ref routed to GPIO\n");
-  // } else {
-  //   printf("failed to route v_ref\n");
-  // }
-  
-  double actualVRef = 1.168;
+  esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
+  if (status == ESP_OK) {
+    printf("v_ref routed to GPIO\n");
+  } else {
+    printf("failed to route v_ref\n");
+  }
+
+  adc1_config_width(ADC_WIDTH_BIT_13);
+  adc1_config_channel_atten(ADC1_CHANNEL_7,ADC_ATTEN_DB_0);
+  esp_adc_cal_value_t val_type = 
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
+
+  double actualVRef = 1.129;
   
   pinMode(PWR_SENS_PIN, INPUT);
   pinMode(BAT_SENS_PIN, INPUT);
@@ -91,10 +102,12 @@ void setup() {
     connectedToPower = true;
   }
 
-  double rawAdcBatteryVal = analogRead(BAT_SENS_PIN);
-  double voltagePerNum = actualVRef/8192.0;
-  double vBatMeasured = rawAdcBatteryVal*voltagePerNum;   // read the input pin, 8192 max
-  double vBat = (vBatMeasured * (470000+4700000)) / 470000.0;
+  double rawAdcBatteryVal = adc1_get_raw(ADC1_CHANNEL_7);
+  // double rawAdcBatteryVal = analogRead(BAT_SENS_PIN);
+  // double voltagePerNum = actualVRef/8192.0;
+  // double vBatMeasured = rawAdcBatteryVal*voltagePerNum;   // read the input pin, 8192 max
+  double vBatMeasured = esp_adc_cal_raw_to_voltage(rawAdcBatteryVal, adc_chars);
+  double vBat = ((vBatMeasured/1000.0) * (470000+4700000)) / 470000.0;
 
   WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
