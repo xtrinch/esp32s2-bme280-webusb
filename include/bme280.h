@@ -12,6 +12,7 @@ typedef struct bme280record {
   float pressure;
   float humidity;
   float battery;
+  float rawBattery;
 } bme280record;
 
 bool setupbme280();

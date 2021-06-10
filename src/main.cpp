@@ -1,4 +1,6 @@
 #include "main.h"
+#include <driver/adc.h>
+#include "esp_adc_cal.h"
 
 RTC_DATA_ATTR int recordCounter = 0;
 RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
@@ -56,9 +58,45 @@ bool isCfgSaved() {
   return cfgSaved;
 }
 
+static void check_efuse(void)
+{
+  if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+    printf("eFuse Two Point: Supported\n");
+  } else {
+    printf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
+  }
+}
+
+#define REF_VOLTAGE 1130
+
+const uint8_t TMP_PIN = 33;
+esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
+
+
 void setup() {
   Serial.begin(115200);
   
+  esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
+  if (status == ESP_OK) {
+    printf("v_ref routed to GPIO\n");
+  } else {
+    printf("failed to route v_ref\n");
+  }
+
+  adc1_config_width(ADC_WIDTH_BIT_13);
+  adc1_config_channel_atten(ADC1_CHANNEL_7,ADC_ATTEN_DB_0);
+  esp_adc_cal_value_t val_type = 
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
+
+  double actualVRef = 1.129;
+  
+  pinMode(PWR_SENS_PIN, INPUT);
+  pinMode(BAT_SENS_PIN, INPUT);
+
+  // adc1_config_channel_atten();
+  analogReadResolution(13);
+  analogSetAttenuation(ADC_0db);
+
   int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
   bool connectedToPower = false;
   if (power > 800) {
@@ -67,12 +105,12 @@ void setup() {
     connectedToPower = true;
   }
 
-  double voltagePerNum = 3.3/8192.0;
-  double vBatMeasured = analogRead(BAT_SENS_PIN)*voltagePerNum;   // read the input pin, 8192 max
-  // double vBatMeasured = analogReadMilliVolts(BAT_SENS_PIN)/1000.0;
-  double vBat = (vBatMeasured * (470000+4700000)) / 470000.0;
-  double adcCalibrationValue = 0.895;
-  vBat = vBat * adcCalibrationValue;
+  double rawAdcBatteryVal = adc1_get_raw(ADC1_CHANNEL_7);
+  // double rawAdcBatteryVal = analogRead(BAT_SENS_PIN);
+  // double voltagePerNum = actualVRef/8192.0;
+  // double vBatMeasured = rawAdcBatteryVal*voltagePerNum;   // read the input pin, 8192 max
+  double vBatMeasured = esp_adc_cal_raw_to_voltage(rawAdcBatteryVal, adc_chars);
+  double vBat = ((vBatMeasured/1000.0) * (470000+4700000)) / 470000.0;
 
   WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
@@ -131,6 +169,7 @@ void setup() {
 
   ardprintf("Measured battery voltage is %f", vBat);
   records[recordCounter].battery = (float)vBat;
+  records[recordCounter].rawBattery = (float)rawAdcBatteryVal;
 
   if (!isCfgSaved()) {
     ardprintf("No config saved :(");
@@ -166,8 +205,8 @@ void setup() {
     sleep();
   }
 
-  // around 1150 should be enough for max rtc records = 4
-  char jsonPayload[1500];
+  // around 2000 should be enough for max rtc records = 4
+  char jsonPayload[2000];
   getJsonPayload(jsonPayload, records);
 
   preferences.begin("iotfreezer", true);
