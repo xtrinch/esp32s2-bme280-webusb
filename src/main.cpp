@@ -67,6 +67,7 @@ static void check_efuse(void)
   }
 }
 
+// multimeter measured reference voltage
 #define REF_VOLTAGE 1130
 
 const uint8_t TMP_PIN = 33;
@@ -74,29 +75,25 @@ esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
 
 void setup() {
-  Serial.begin(115200);
-  
-  esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
-  if (status == ESP_OK) {
-    printf("v_ref routed to GPIO\n");
-  } else {
-    printf("failed to route v_ref\n");
-  }
+  // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
+  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
+  // if (status == ESP_OK) {
+  //   printf("v_ref routed to GPIO\n");
+  // } else {
+  //   printf("failed to route v_ref\n");
+  // }
 
+  // calibrate the ADC with the measured VREF at 0 attenuation
   adc1_config_width(ADC_WIDTH_BIT_13);
   adc1_config_channel_atten(ADC1_CHANNEL_7,ADC_ATTEN_DB_0);
   esp_adc_cal_value_t val_type = 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
+  // analogReadResolution(13);
+  // analogSetAttenuation(ADC_0db);
 
-  double actualVRef = 1.129;
-  
   pinMode(PWR_SENS_PIN, INPUT);
   pinMode(BAT_SENS_PIN, INPUT);
-
-  // adc1_config_channel_atten();
-  analogReadResolution(13);
-  analogSetAttenuation(ADC_0db);
-
+  
   int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
   bool connectedToPower = false;
   if (power > 800) {
