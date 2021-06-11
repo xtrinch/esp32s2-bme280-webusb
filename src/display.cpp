@@ -253,20 +253,24 @@ void draw()
   display.clearScreen();
   display.firstPage(); // seems to be necessary
 
-  drawBitmapFromSpiffs("thermometer.bmp", 4, 55);
-  display.setCursor(75,99);
+  drawBitmapFromSpiffs("thermometer.bmp", 4, 5);
+  display.setCursor(75,49);
   display.printf("%.1f", 24.5);
 
-  drawBitmapFromSpiffs("humidity.bmp", 0, 129);
-  display.setCursor(75,178);
+  drawBitmapFromSpiffs("humidity.bmp", 0, 79);
+  display.setCursor(75,128);
   display.printf("%.0f", 30.0);
 
+  drawBitmapFromSpiffs("battery.bmp", 155, 160);
   display.setFont(&FreeMonoBold12pt7b);
   display.setTextSize(1);
-  display.setCursor(0,15);
-  display.printf("Last update:");
-  display.setCursor(0,37);
-  display.printf("01/02/2021");
+  display.setCursor(105,185);
+  display.printf("%.0f%%", 20.0);
+
+  // display.setCursor(0,15);
+  // display.printf("Last update:");
+  // display.setCursor(0,37);
+  // display.printf("01/02/2021");
 
   // display.refresh(); // full update
   display.display(true); // partial update
