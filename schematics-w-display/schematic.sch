@@ -114,60 +114,44 @@ GND
 $Comp
 L Connector:Conn_01x08_Female J4
 U 1 1 60EB76B2
-P 3050 4050
-F 0 "J4" H 2942 3425 50  0000 C CNN
-F 1 "Conn_01x08_Female" H 2942 3516 50  0000 C CNN
-F 2 "Connector_JST:JST_PH_B8B-PH-K_1x08_P2.00mm_Vertical" H 3050 4050 50  0001 C CNN
-F 3 "~" H 3050 4050 50  0001 C CNN
-	1    3050 4050
-	-1   0    0    1   
+P 3250 3950
+F 0 "J4" H 3142 3325 50  0000 C CNN
+F 1 "Conn_01x08_Female" H 3142 3416 50  0000 C CNN
+F 2 "Connector_JST:JST_PH_S8B-PH-K_1x08_P2.00mm_Horizontal" H 3250 3950 50  0001 C CNN
+F 3 "~" H 3250 3950 50  0001 C CNN
+	1    3250 3950
+	1    0    0    -1  
 $EndComp
 Text GLabel 3550 3750 2    50   Input ~ 0
 GND
 Wire Wire Line
 	3900 3100 3900 3650
 Wire Wire Line
-	3900 3650 3250 3650
-Wire Wire Line
-	3250 4350 3500 4350
-Wire Wire Line
 	3500 4350 3500 4800
 Wire Wire Line
 	3500 4800 4400 4800
-Wire Wire Line
-	3250 4250 3600 4250
 Wire Wire Line
 	3600 4250 3600 4700
 Wire Wire Line
 	3600 4700 4400 4700
 Wire Wire Line
-	3250 4150 3700 4150
-Wire Wire Line
 	3700 4150 3700 4600
 Wire Wire Line
 	3700 4600 4400 4600
-Wire Wire Line
-	3250 4050 3800 4050
 Wire Wire Line
 	3800 4050 3800 4500
 Wire Wire Line
 	3800 4500 4400 4500
 Wire Wire Line
-	3250 3950 3900 3950
-Wire Wire Line
 	3900 3950 3900 4400
 Wire Wire Line
 	3900 4400 4400 4400
-Wire Wire Line
-	3250 3850 4000 3850
 Wire Wire Line
 	4000 3850 4000 4300
 Wire Wire Line
 	4000 4300 4400 4300
 Text Label 3250 3850 0    50   ~ 0
 MOSI
-Wire Wire Line
-	3250 3750 3550 3750
 Text Label 3250 3950 0    50   ~ 0
 CLK
 Text Label 3250 4050 0    50   ~ 0
@@ -183,4 +167,20 @@ Text Label 3250 3650 0    50   ~ 0
 Wire Wire Line
 	3900 3100 4400 3100
 Connection ~ 4400 3100
+Wire Wire Line
+	3050 3650 3900 3650
+Wire Wire Line
+	3050 3750 3550 3750
+Wire Wire Line
+	3050 3850 4000 3850
+Wire Wire Line
+	3050 3950 3900 3950
+Wire Wire Line
+	3050 4050 3800 4050
+Wire Wire Line
+	3050 4150 3700 4150
+Wire Wire Line
+	3050 4250 3600 4250
+Wire Wire Line
+	3050 4350 3500 4350
 $EndSCHEMATC
