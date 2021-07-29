@@ -5,7 +5,6 @@
 RTC_DATA_ATTR int recordCounter = 0;
 RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 
-#include <Adafruit_NeoPixel.h>  // go to Main Menu --> Sketch --> Include Library --> Manage libraries... search for Adafruit NeoPixel and install it (as of 4th February 2021 latest version is 1.7.0)
 #define PIN 18
 #define NUMPIXELS 1
 #define PWR_SENS_PIN 7
@@ -67,14 +66,19 @@ static void check_efuse(void)
   }
 }
 
+// TODO: move to env
 // multimeter measured reference voltage
 #define REF_VOLTAGE 1130
+
+// TODO: fork gxepd, to enable pin customization
 
 const uint8_t TMP_PIN = 33;
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
-
 void setup() {
+  // this can stay, even if we're not using serial
+  Serial.begin(115200);
+
   // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
   // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
   // if (status == ESP_OK) {
@@ -139,7 +143,9 @@ void setup() {
 
   // wait if usb connection appears - below 500 won't work
   if (connectedToPower) {
-    delay(500);
+    Serial.println("COnnectedto power!!");
+    delay(5000);
+    Serial.println(usbConnected);
 
     if (usbConnected) {
       if (isCfgSaved()) {
@@ -156,10 +162,6 @@ void setup() {
   }
 
   setupDisplay();
-  while(true) {
-    draw();
-    delay(3000);
-  }
 
   // TODO: comment out
   // delay(5000);
@@ -186,6 +188,8 @@ void setup() {
     sleep();
     return;
   }
+
+  draw(&records[recordCounter]);
 
   ardprintf("Measurement %d done", recordCounter);
   recordCounter++;

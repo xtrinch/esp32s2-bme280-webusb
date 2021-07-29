@@ -1,4 +1,5 @@
-// GxEPD_MinimumExample by Jean-Marc Zingg
+#include "epaper-display.h"
+
 #include <SPIFFS.h>
 
 #include <GxEPD2_BW.h>
@@ -7,7 +8,6 @@
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include "GxEPD2_display_selection_new_style.h"
 #include "bitmaps/Bitmaps200x200.h" // 1.54" b/w
-
 
 static const uint16_t input_buffer_pixels = 800; // may affect performance
 
@@ -243,8 +243,7 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
   }
 }
 
-void draw()
-{
+void draw(bme280record * record) {
   display.setPartialWindow(0, 0, display.width(), display.height());
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold24pt7b);
@@ -255,17 +254,17 @@ void draw()
 
   drawBitmapFromSpiffs("thermometer.bmp", 4, 5);
   display.setCursor(75,49);
-  display.printf("%.1f", 24.5);
+  display.printf("%.1f", record->temp);
 
   drawBitmapFromSpiffs("humidity.bmp", 0, 79);
   display.setCursor(75,128);
-  display.printf("%.0f", 30.0);
+  display.printf("%.0f", record->humidity);
 
   drawBitmapFromSpiffs("battery.bmp", 155, 160);
   display.setFont(&FreeMonoBold12pt7b);
   display.setTextSize(1);
   display.setCursor(105,185);
-  display.printf("%.0f%%", 20.0);
+  display.printf("%.0f%%", record->battery);
 
   // display.setCursor(0,15);
   // display.printf("Last update:");

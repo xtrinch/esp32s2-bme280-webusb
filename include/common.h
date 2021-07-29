@@ -14,6 +14,9 @@
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
 
+extern int maxRtcRecords;
+extern int sleepInMinutes;
+
 extern CDCusb USBSerial;
 extern Preferences preferences;
 
