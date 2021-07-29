@@ -70,6 +70,8 @@ static void check_efuse(void)
 // multimeter measured reference voltage
 #define REF_VOLTAGE 1130
 
+// TODO:get rid of battery indicator when on power
+
 // TODO: fork gxepd, to enable pin customization
 
 const uint8_t TMP_PIN = 33;
@@ -159,8 +161,6 @@ void setup() {
     }
   }
 
-  setupDisplay();
-
   // TODO: comment out
   // delay(5000);
 
@@ -187,6 +187,7 @@ void setup() {
     return;
   }
 
+  setupDisplay();
   draw(&records[recordCounter]);
 
   ardprintf("Measurement %d done", recordCounter);

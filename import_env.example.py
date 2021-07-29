@@ -8,4 +8,5 @@ env.Append(CPPDEFINES=[
   ("SPI_SCK", 1), # clock SCL on bme
   ("DEBUG", 1),
   ("ENABLE_USB_CONFIGURATOR", 1),
+  ("BOARD_HAS_PSRAM", 1), # if your board has PSRam or not
 ])
