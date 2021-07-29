@@ -7,4 +7,5 @@ env.Append(CPPDEFINES=[
   ("SPI_MISO", 4), # SDO on bme
   ("SPI_SCK", 1), # clock SCL on bme
   ("DEBUG", 1),
+  ("ENABLE_USB_CONFIGURATOR", 1),
 ])

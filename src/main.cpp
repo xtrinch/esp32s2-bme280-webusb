@@ -142,10 +142,8 @@ void setup() {
   }
 
   // wait if usb connection appears - below 500 won't work
-  if (connectedToPower) {
-    Serial.println("COnnectedto power!!");
-    delay(5000);
-    Serial.println(usbConnected);
+  if (connectedToPower && ENABLE_USB_CONFIGURATOR) {
+    delay(500);
 
     if (usbConnected) {
       if (isCfgSaved()) {
@@ -281,7 +279,9 @@ void loop() {
       obj["timeBetweenMeasurements"].as<uint8_t>(),
       obj["maxRtcRecords"].as<uint8_t>()
     );
-    if (configSaved) {
+
+    // recheck, just in case
+    if (configSaved && isCfgSaved()) {
       // blue, so we know we've configured it even if it was already configured
       pixels.setPixelColor(0, pixels.Color(0, 0, 255));
       pixels.show();
