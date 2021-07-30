@@ -33,6 +33,7 @@ class MyCDCUSBCallbacks: public CDCCallbacks {
   // when a serial monitor connects
   bool onConnect(bool dtr, bool rts) {
     ardprintf("Connected");
+    usbConnected = 1;
     return true;
   }
   void onData() { 
@@ -66,16 +67,6 @@ static void check_efuse(void)
   }
 }
 
-// TODO: move to env
-// multimeter measured reference voltage
-#define REF_VOLTAGE 1130
-
-// TODO:get rid of battery indicator when on power
-
-// TODO: fork gxepd, to enable pin customization
-
-// TODO: make mergable to master - optional display
-
 const uint8_t TMP_PIN = 33;
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
@@ -84,12 +75,12 @@ void setup() {
   Serial.begin(115200);
 
   // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
-  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
-  // if (status == ESP_OK) {
-  //   printf("v_ref routed to GPIO\n");
-  // } else {
-  //   printf("failed to route v_ref\n");
-  // }
+  esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_26);
+  if (status == ESP_OK) {
+    printf("v_ref routed to GPIO\n");
+  } else {
+    printf("failed to route v_ref\n");
+  }
 
   // calibrate the ADC with the measured VREF at 0 attenuation
   adc1_config_width(ADC_WIDTH_BIT_13);
@@ -111,9 +102,6 @@ void setup() {
   }
 
   double rawAdcBatteryVal = adc1_get_raw(ADC1_CHANNEL_7);
-  // double rawAdcBatteryVal = analogRead(BAT_SENS_PIN);
-  // double voltagePerNum = actualVRef/8192.0;
-  // double vBatMeasured = rawAdcBatteryVal*voltagePerNum;   // read the input pin, 8192 max
   double vBatMeasured = esp_adc_cal_raw_to_voltage(rawAdcBatteryVal, adc_chars);
   double vBat = ((vBatMeasured/1000.0) * (470000+4700000)) / 470000.0;
 
@@ -122,18 +110,18 @@ void setup() {
   pixels.clear();
   pixels.show();
 
+  USBSerial.setCallbacks(new MyCDCUSBCallbacks());
+
   WebUSBSerial.landingPageURI("iotfreezer.com", false);
   WebUSBSerial.deviceID(0x2341, 0x0002);
   WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
 
-  USBSerial.setCallbacks(new MyCDCUSBCallbacks());
+  if(!USBSerial.begin()) {
+    ardprintf("Failed to start USB stack");
+  }
 
   if(!WebUSBSerial.begin()) {
     ardprintf("Failed to start webUSB stack");
-  }
-
-  if(!USBSerial.begin()) {
-    ardprintf("Failed to start USB stack");
   }
 
   if (isCfgSaved()) {
@@ -189,8 +177,10 @@ void setup() {
     return;
   }
 
-  setupDisplay();
-  draw(&records[recordCounter]);
+  if (ENABLE_DISPLAY) {
+    setupDisplay();
+    draw(&records[recordCounter]);
+  }
 
   ardprintf("Measurement %d done", recordCounter);
   recordCounter++;
@@ -201,6 +191,12 @@ void setup() {
     return;
   }
   recordCounter = 0;
+
+  // everything after this point is just sending the measurement
+  // to internet, so it's safe to just return
+  if (!ENABLE_CLOUD_SYNC) {
+    return;
+  }
 
   if (!connectToWifi()) {
     ardprintf("Wi-fi connection failed");
