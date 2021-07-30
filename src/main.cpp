@@ -74,6 +74,8 @@ static void check_efuse(void)
 
 // TODO: fork gxepd, to enable pin customization
 
+// TODO: make mergable to master - optional display
+
 const uint8_t TMP_PIN = 33;
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
