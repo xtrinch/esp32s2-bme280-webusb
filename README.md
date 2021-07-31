@@ -32,7 +32,8 @@ If you cannot upload to your board on linux, input `sudo chmod a+rw /dev/ttyUSB0
 
 To monitor across reboots, as uploading and monitoring does not work, use the following command on Linux:
 `while [ true ]; do cat /dev/ttyACM0; done`
-
+ 
+To check out the usb descriptors, run `lsusb -v`. To check out the kernel logs for errors, run `dmesg`.
 ##
 
  `convert temperature-2-48.png -background white -alpha remove -alpha off -compress none -depth 24 -resize 48x48 temp-final.bmp`

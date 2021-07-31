@@ -31,8 +31,8 @@ class MyWebUSBCallbacks: public WebUSBCallbacks {
 
 class MyCDCUSBCallbacks: public CDCCallbacks {
   // when a serial monitor connects
-  bool onConnect(bool dtr, bool rts) {
-    ardprintf("Connected");
+  bool onConnect(int itf, bool dtr, bool rts) {
+    ardprintf("Connected, dtr: %d, rts: %d, itf: %d", dtr, rts, itf);
     usbConnected = 1;
     return true;
   }
@@ -74,21 +74,20 @@ void setup() {
   // this can stay, even if we're not using serial
   Serial.begin(115200);
 
-  // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
-  esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_26);
-  if (status == ESP_OK) {
-    printf("v_ref routed to GPIO\n");
-  } else {
-    printf("failed to route v_ref\n");
-  }
-
   // calibrate the ADC with the measured VREF at 0 attenuation
   adc1_config_width(ADC_WIDTH_BIT_13);
   adc1_config_channel_atten(ADC1_CHANNEL_7,ADC_ATTEN_DB_0);
   esp_adc_cal_value_t val_type = 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
-  // analogReadResolution(13);
-  // analogSetAttenuation(ADC_0db);
+
+  // // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
+  // // make sure it's after the attenuation set call
+  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_17);
+  // if (status == ESP_OK) {
+  //   printf("v_ref routed to GPIO\n");
+  // } else {
+  //   printf("failed to route v_ref\n");
+  // }
 
   pinMode(PWR_SENS_PIN, INPUT);
   pinMode(BAT_SENS_PIN, INPUT);
@@ -118,10 +117,12 @@ void setup() {
 
   if(!USBSerial.begin()) {
     ardprintf("Failed to start USB stack");
+    return;
   }
 
   if(!WebUSBSerial.begin()) {
     ardprintf("Failed to start webUSB stack");
+    return;
   }
 
   if (isCfgSaved()) {
