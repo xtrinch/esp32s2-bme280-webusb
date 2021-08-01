@@ -7,8 +7,7 @@ RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 
 #define PIN 18
 #define NUMPIXELS 1
-#define PWR_SENS_PIN 7
-#define BAT_SENS_PIN 8
+#define BAT_SENS_PIN 8 // TODO: to env
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -16,7 +15,7 @@ WebUSB WebUSBSerial;
 CDCusb USBSerial;
 Preferences preferences;
 
-volatile int usbConnected = 0;
+volatile bool usbConnected = 0;
 
 // in-sane defaults, which shouldn't be used
 // if there's no user configuration anyway
@@ -25,6 +24,7 @@ int sleepInMinutes = 1; // send once per minute
 
 class MyWebUSBCallbacks: public WebUSBCallbacks {
     void onConnect(bool state) {
+      usbConnected = true;
       ardprintf("webusb is %s\n", state ? "connected":"disconnected");
     }
 };
@@ -33,15 +33,23 @@ class MyCDCUSBCallbacks: public CDCCallbacks {
   // when a serial monitor connects
   bool onConnect(int itf, bool dtr, bool rts) {
     ardprintf("Connected, dtr: %d, rts: %d, itf: %d", dtr, rts, itf);
-    usbConnected = 1;
+    usbConnected = true;
     return true;
   }
   void onData() { 
     ardprintf("Received");
+    usbConnected = true;
   }
   void onCodingChange(cdc_line_coding_t const* p_line_coding) { 
     ardprintf("C:");
-    usbConnected = 1;
+    usbConnected = true;
+  }
+};
+
+class MyUSBCallbacks: public USBCallbacks {
+  void onMount() {
+    ardprintf("Mounted");
+    usbConnected = true;
   }
 };
 
@@ -74,9 +82,30 @@ void setup() {
   // this can stay, even if we're not using serial
   Serial.begin(115200);
 
+  USBSerial.setCallbacks(new MyCDCUSBCallbacks());
+
+  WebUSBSerial.landingPageURI("iotfreezer.com", false);
+  WebUSBSerial.deviceID(0x2341, 0x0002);
+  WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
+
+  EspTinyUSB::registerDeviceCallbacks(new MyUSBCallbacks());
+
+  if(!USBSerial.begin()) {
+    ardprintf("Failed to start USB stack");
+    return;
+  }
+
+  if(!WebUSBSerial.begin()) {
+    ardprintf("Failed to start webUSB stack");
+    return;
+  }
+
+  pinMode(BAT_SENS_PIN, INPUT);
+  pinMode(PWR_SENS_PIN, INPUT);
+
   // calibrate the ADC with the measured VREF at 0 attenuation
   adc1_config_width(ADC_WIDTH_BIT_13);
-  adc1_config_channel_atten(ADC1_CHANNEL_7,ADC_ATTEN_DB_0);
+  adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_0); // TODO: channels should be parametrized from pin number
   esp_adc_cal_value_t val_type = 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
 
@@ -89,12 +118,13 @@ void setup() {
   //   printf("failed to route v_ref\n");
   // }
 
-  pinMode(PWR_SENS_PIN, INPUT);
-  pinMode(BAT_SENS_PIN, INPUT);
+  adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
+  double rawAdcPower = adc1_get_raw(ADC1_CHANNEL_6);   // read the input pin, 8129 max
+  double vPowerMeasured = esp_adc_cal_raw_to_voltage(rawAdcPower, adc_chars);
+  double vPower = ((vPowerMeasured/1000.0) * (1000+10000)) / 1000.0;
   
-  int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
   bool connectedToPower = false;
-  if (power > 800) {
+  if (vPower > 4.0) {
     // as an alternative, this could be used for usb connected status, but
     // it would also fire when charging via a regular outlet
     connectedToPower = true;
@@ -109,22 +139,6 @@ void setup() {
   pixels.clear();
   pixels.show();
 
-  USBSerial.setCallbacks(new MyCDCUSBCallbacks());
-
-  WebUSBSerial.landingPageURI("iotfreezer.com", false);
-  WebUSBSerial.deviceID(0x2341, 0x0002);
-  WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
-
-  if(!USBSerial.begin()) {
-    ardprintf("Failed to start USB stack");
-    return;
-  }
-
-  if(!WebUSBSerial.begin()) {
-    ardprintf("Failed to start webUSB stack");
-    return;
-  }
-
   if (isCfgSaved()) {
     preferences.begin("iotfreezer", true);
     maxRtcRecords = preferences.getInt("max_rtc_records");
@@ -135,9 +149,9 @@ void setup() {
   }
 
   // wait if usb connection appears - below 500 won't work
-  if (connectedToPower && ENABLE_USB_CONFIGURATOR) {
+  if ((connectedToPower && ENABLE_USB_CONFIGURATOR)) {
     delay(500);
-
+    ardprintf("Connected!. Power is raw %f, measured %f, calculated %f", rawAdcPower, vPowerMeasured, vPower);
     if (usbConnected) {
       if (isCfgSaved()) {
         // green
