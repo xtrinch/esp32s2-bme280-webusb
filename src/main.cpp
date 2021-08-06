@@ -7,7 +7,6 @@ RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 
 #define PIN 18
 #define NUMPIXELS 1
-#define BAT_SENS_PIN 8 // TODO: to env
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -84,7 +83,7 @@ void setup() {
 
   USBSerial.setCallbacks(new MyCDCUSBCallbacks());
 
-  WebUSBSerial.landingPageURI("iotfreezer.com", false);
+  WebUSBSerial.landingPageURI("iotfreezer.com", true);
   WebUSBSerial.deviceID(0x2341, 0x0002);
   WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
 
@@ -150,7 +149,9 @@ void setup() {
 
   // wait if usb connection appears - below 500 won't work
   if ((connectedToPower && ENABLE_USB_CONFIGURATOR)) {
-    delay(500);
+    // we can afford to wait a little longer since we know that the
+    // connected to power works well
+    delay(1500);
     ardprintf("Connected!. Power is raw %f, measured %f, calculated %f", rawAdcPower, vPowerMeasured, vPower);
     if (usbConnected) {
       if (isCfgSaved()) {

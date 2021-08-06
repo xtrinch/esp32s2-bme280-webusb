@@ -19,4 +19,5 @@ env.Append(CPPDEFINES=[
   ("REF_VOLTAGE", 1130), # multimeter measured reference voltage
   ("ENABLE_CLOUD_SYNC", 1), # whether the board should send measurement to the cloud
   ("PWR_SENS_PIN", 7), # with this pin we can sense whether we're connected to external power or not
+  ("BAT_SENS_PIN", 8), # pin on which we can read battery voltage
 ])

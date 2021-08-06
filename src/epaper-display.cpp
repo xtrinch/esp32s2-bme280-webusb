@@ -264,7 +264,9 @@ void draw(bme280record * record) {
   display.setFont(&FreeMonoBold12pt7b);
   display.setTextSize(1);
   display.setCursor(105,185);
-  display.printf("%.0f%%", record->battery);
+  // usable lipo battery cell voltage is from 3.2 to 4.2V,
+  // the input will come in as e.g. 4.2 double
+  display.printf("%.0f%%", (record->battery - 3.2) * 100);
 
   // display.setCursor(0,15);
   // display.printf("Last update:");
