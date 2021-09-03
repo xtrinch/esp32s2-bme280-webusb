@@ -18,7 +18,7 @@ L Connector:Conn_01x21_Female J1
 U 1 1 604CADD6
 P 5450 4100
 F 0 "J1" H 5478 4126 50  0000 L CNN
-F 1 "Conn_01x21_Female" H 5478 4035 50  0000 L CNN
+F 1 "Conn_01x21_Female_ESP" H 5478 4035 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x21_P2.54mm_Vertical" H 5450 4100 50  0001 C CNN
 F 3 "~" H 5450 4100 50  0001 C CNN
 	1    5450 4100
@@ -29,7 +29,7 @@ L Connector:Conn_01x06_Female J2
 U 1 1 604D4A59
 P 4750 2400
 F 0 "J2" V 4688 2012 50  0000 R CNN
-F 1 "Conn_01x06_Female" V 4597 2012 50  0000 R CNN
+F 1 "Conn_01x06_Female_BME280" V 4597 2012 50  0000 R CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical" H 4750 2400 50  0001 C CNN
 F 3 "~" H 4750 2400 50  0001 C CNN
 	1    4750 2400
@@ -62,12 +62,10 @@ NoConn ~ 5250 3600
 NoConn ~ 5250 3500
 NoConn ~ 5250 3400
 NoConn ~ 5250 3300
-NoConn ~ 5250 3200
 NoConn ~ 4400 3800
 NoConn ~ 4400 3700
 NoConn ~ 4400 5000
 NoConn ~ 4400 4900
-NoConn ~ 4400 3200
 NoConn ~ 4400 4200
 NoConn ~ 4400 4100
 NoConn ~ 4400 4000
@@ -77,7 +75,7 @@ L Connector:Conn_01x21_Female J3
 U 1 1 604CC464
 P 4200 4100
 F 0 "J3" H 4092 2875 50  0000 C CNN
-F 1 "Conn_01x21_Female" H 4092 2966 50  0000 C CNN
+F 1 "Conn_01x21_Female_ESP" H 4092 2966 50  0000 C CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x21_P2.54mm_Vertical" H 4200 4100 50  0001 C CNN
 F 3 "~" H 4200 4100 50  0001 C CNN
 	1    4200 4100
@@ -116,7 +114,7 @@ L Connector:Conn_01x08_Female J4
 U 1 1 60EB76B2
 P 3250 3950
 F 0 "J4" H 3142 3325 50  0000 C CNN
-F 1 "Conn_01x08_Female" H 3142 3416 50  0000 C CNN
+F 1 "Conn_01x08_Female_Display" H 3142 3416 50  0000 C CNN
 F 2 "Connector_JST:JST_PH_S8B-PH-K_1x08_P2.00mm_Horizontal" H 3250 3950 50  0001 C CNN
 F 3 "~" H 3250 3950 50  0001 C CNN
 	1    3250 3950
@@ -183,4 +181,34 @@ Wire Wire Line
 	3050 4250 3600 4250
 Wire Wire Line
 	3050 4350 3500 4350
+$Comp
+L Switch:SW_Push SW1
+U 1 1 610E97B1
+P 3450 3200
+F 0 "SW1" H 3450 3485 50  0000 C CNN
+F 1 "Bootloader_Push" H 3450 3394 50  0000 C CNN
+F 2 "Button_Switch_THT:SW_PUSH_6mm" H 3450 3400 50  0001 C CNN
+F 3 "~" H 3450 3400 50  0001 C CNN
+	1    3450 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3650 3200 4400 3200
+Text GLabel 3250 3200 0    50   Input ~ 0
+GND
+$Comp
+L Switch:SW_Push SW2
+U 1 1 610ECECB
+P 5900 3200
+F 0 "SW2" H 5900 3485 50  0000 C CNN
+F 1 "RST_Push" H 5900 3394 50  0000 C CNN
+F 2 "Button_Switch_THT:SW_Tactile_SKHH_Angled" H 5900 3400 50  0001 C CNN
+F 3 "~" H 5900 3400 50  0001 C CNN
+	1    5900 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5250 3200 5700 3200
+Text GLabel 6100 3200 2    50   Input ~ 0
+GND
 $EndSCHEMATC

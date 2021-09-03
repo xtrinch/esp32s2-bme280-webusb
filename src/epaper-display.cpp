@@ -277,6 +277,8 @@ void draw(bme280record * record) {
   display.display(true); // partial update
 
   display.powerOff();
+  display.hibernate();
+  
   Serial.println("Update finished");
   delay(20000);
   randomNumber ++;
