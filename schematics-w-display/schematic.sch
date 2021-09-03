@@ -35,8 +35,6 @@ F 3 "~" H 4750 2400 50  0001 C CNN
 	1    4750 2400
 	0    -1   -1   0   
 $EndComp
-Text Label 4400 3100 0    50   ~ 0
-3v3
 Text Label 4400 3300 0    50   ~ 0
 SDO
 Text Label 4400 3400 0    50   ~ 0
@@ -63,7 +61,6 @@ NoConn ~ 5250 3500
 NoConn ~ 5250 3400
 NoConn ~ 5250 3300
 NoConn ~ 4400 3800
-NoConn ~ 4400 3700
 NoConn ~ 4400 5000
 NoConn ~ 4400 4900
 NoConn ~ 4400 4200
@@ -83,10 +80,6 @@ F 3 "~" H 4200 4100 50  0001 C CNN
 $EndComp
 Text Label 4400 3600 0    50   ~ 0
 SCL
-Wire Wire Line
-	4400 3100 4550 3100
-Wire Wire Line
-	4550 3100 4550 2600
 Wire Wire Line
 	4400 3300 4750 3300
 Wire Wire Line
@@ -123,8 +116,6 @@ $EndComp
 Text GLabel 3550 3750 2    50   Input ~ 0
 GND
 Wire Wire Line
-	3900 3100 3900 3650
-Wire Wire Line
 	3500 4350 3500 4800
 Wire Wire Line
 	3500 4800 4400 4800
@@ -160,13 +151,6 @@ Text Label 3250 4250 0    50   ~ 0
 RST
 Text Label 3250 4350 0    50   ~ 0
 BUSY
-Text Label 3250 3650 0    50   ~ 0
-3v3
-Wire Wire Line
-	3900 3100 4400 3100
-Connection ~ 4400 3100
-Wire Wire Line
-	3050 3650 3900 3650
 Wire Wire Line
 	3050 3750 3550 3750
 Wire Wire Line
@@ -211,4 +195,49 @@ Wire Wire Line
 	5250 3200 5700 3200
 Text GLabel 6100 3200 2    50   Input ~ 0
 GND
+$Comp
+L Sensor_Optical:LDR03 R1
+U 1 1 613275E0
+P 2650 3250
+F 0 "R1" H 2720 3296 50  0000 L CNN
+F 1 "LDR03" H 2720 3205 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" V 2825 3250 50  0001 C CNN
+F 3 "http://www.elektronica-componenten.nl/WebRoot/StoreNL/Shops/61422969/54F1/BA0C/C664/31B9/2173/C0A8/2AB9/2AEF/LDR03IMP.pdf" H 2650 3200 50  0001 C CNN
+	1    2650 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 613286A5
+P 2650 3650
+F 0 "R2" H 2720 3696 50  0000 L CNN
+F 1 "10kOhm" H 2720 3605 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" V 2580 3650 50  0001 C CNN
+F 3 "~" H 2650 3650 50  0001 C CNN
+	1    2650 3650
+	1    0    0    -1  
+$EndComp
+Text GLabel 2650 3800 3    50   Input ~ 0
+GND
+Text GLabel 2650 3100 1    50   Input ~ 0
+3v3
+Wire Wire Line
+	4400 3700 4000 3700
+Wire Wire Line
+	4000 3700 4000 3450
+Wire Wire Line
+	2650 3450 2650 3400
+Wire Wire Line
+	2650 3450 4000 3450
+Wire Wire Line
+	2650 3500 2650 3450
+Connection ~ 2650 3450
+Text GLabel 3550 3650 2    50   Input ~ 0
+3v3
+Wire Wire Line
+	3050 3650 3550 3650
+Text GLabel 4550 2600 3    50   Input ~ 0
+3v3
+Text GLabel 4400 3100 2    50   Input ~ 0
+3v3
 $EndSCHEMATC
