@@ -1,6 +1,6 @@
 #include "bme280.h"
 
-Adafruit_BME280 bme(SPI_CS, SPI_MOSI, SPI_MISO, SPI_SCK); // use SPI interface
+Adafruit_BME280 bme(SENSOR_SPI_CS, SENSOR_SPI_MOSI, SENSOR_SPI_MISO, SENSOR_SPI_SCK); // use SPI interface
 Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
 Adafruit_Sensor *bme_pressure = bme.getPressureSensor();
 Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();

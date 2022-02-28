@@ -3,7 +3,7 @@
 
 #include <Adafruit_BME280.h>
 #include "ArduinoJson.h"
-#include "main.h"
+#include "common.h"
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 
@@ -18,4 +18,5 @@ typedef struct bme280record {
 bool setupbme280();
 bool makeMeasurement(bme280record *record);
 bool getJsonPayload(char * buf, bme280record records[]);
+
 #endif

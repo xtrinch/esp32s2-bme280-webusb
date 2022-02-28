@@ -8,7 +8,7 @@ The board I used is: [ESP32-S2-DevKit-Lipo-USB from olimex](https://www.olimex.c
 
 If you botch the code and manage to put it to sleep when on USB, boot the board into bootloader mode by holding the button `BUT1` on the board when connecting to USB, then you will be able to flash via USB again.
 
-Currently, this firmware can make it around 6 weeks on a 1600mA battery connected to the dev board. The board can be configured to send the measurements to the server once every N times via the parameter `maxRtcRecords` to optimize battery time.
+Currently, this firmware can make it a couple of months on a 1200mA battery connected to the dev board. The board can be configured to send the measurements to the server once every N times via the parameter `maxRtcRecords` to optimize battery time.
 
 Built with PlatformIO.
 
@@ -18,7 +18,8 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 
 1. Have a sensor dashboard backend running (see https://github.com/xtrinch/sensor-dashboard-nestjs-backend) or use [iotfreezer](http://iotfreezer.com/).
 2. Copy `import_env.example.py` to `import_env.py` and define your sensor dashboard url.
-3. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
+3. Run `pio run -t buildfs` && `pio run -t uploadfs` to upload the images
+4. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
 
 ## Components
 - ESP32S2 dev board with native (!) usb support -> there should not be a usb to serial converter on the board
@@ -28,3 +29,12 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 ## Troubleshooting
 
 If you cannot upload to your board on linux, input `sudo chmod a+rw /dev/ttyUSB0`.
+
+To monitor across reboots, as uploading and monitoring does not work, use the following command on Linux:
+`while [ true ]; do cat /dev/ttyACM0; done`
+ 
+To check out the usb descriptors, run `lsusb -v`. To check out the kernel logs for errors, run `dmesg`.
+##
+
+ `convert temperature-2-48.png -background white -alpha remove -alpha off -compress none -depth 24 -resize 48x48 temp-final.bmp`
+

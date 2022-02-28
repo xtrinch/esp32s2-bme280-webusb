@@ -5,11 +5,8 @@
 RTC_DATA_ATTR int recordCounter = 0;
 RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 
-#include <Adafruit_NeoPixel.h>  // go to Main Menu --> Sketch --> Include Library --> Manage libraries... search for Adafruit NeoPixel and install it (as of 4th February 2021 latest version is 1.7.0)
 #define PIN 18
 #define NUMPIXELS 1
-#define PWR_SENS_PIN 7
-#define BAT_SENS_PIN 8
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -17,7 +14,7 @@ WebUSB WebUSBSerial;
 CDCusb USBSerial;
 Preferences preferences;
 
-volatile int usbConnected = 0;
+volatile bool usbConnected = 0;
 
 // in-sane defaults, which shouldn't be used
 // if there's no user configuration anyway
@@ -26,22 +23,32 @@ int sleepInMinutes = 1; // send once per minute
 
 class MyWebUSBCallbacks: public WebUSBCallbacks {
     void onConnect(bool state) {
+      usbConnected = true;
       ardprintf("webusb is %s\n", state ? "connected":"disconnected");
     }
 };
 
 class MyCDCUSBCallbacks: public CDCCallbacks {
   // when a serial monitor connects
-  bool onConnect(bool dtr, bool rts) {
-    ardprintf("Connected");
+  bool onConnect(int itf, bool dtr, bool rts) {
+    ardprintf("Connected, dtr: %d, rts: %d, itf: %d", dtr, rts, itf);
+    usbConnected = true;
     return true;
   }
   void onData() { 
     ardprintf("Received");
+    usbConnected = true;
   }
   void onCodingChange(cdc_line_coding_t const* p_line_coding) { 
     ardprintf("C:");
-    usbConnected = 1;
+    usbConnected = true;
+  }
+};
+
+class MyUSBCallbacks: public USBCallbacks {
+  void onMount() {
+    ardprintf("Mounted");
+    usbConnected = true;
   }
 };
 
@@ -67,45 +74,62 @@ static void check_efuse(void)
   }
 }
 
-// multimeter measured reference voltage
-#define REF_VOLTAGE 1130
-
 const uint8_t TMP_PIN = 33;
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
-
 void setup() {
-  // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
-  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_14);
+  // this can stay, even if we're not using serial
+  Serial.begin(115200);
+
+  USBSerial.setCallbacks(new MyCDCUSBCallbacks());
+
+  WebUSBSerial.landingPageURI("iotfreezer.com", true);
+  WebUSBSerial.deviceID(0x2341, 0x0002);
+  WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
+
+  EspTinyUSB::registerDeviceCallbacks(new MyUSBCallbacks());
+
+  if(!USBSerial.begin()) {
+    ardprintf("Failed to start USB stack");
+    return;
+  }
+
+  if(!WebUSBSerial.begin()) {
+    ardprintf("Failed to start webUSB stack");
+    return;
+  }
+
+  pinMode(BAT_SENS_PIN, INPUT);
+  pinMode(PWR_SENS_PIN, INPUT);
+
+  // calibrate the ADC with the measured VREF at 0 attenuation
+  adc1_config_width(ADC_WIDTH_BIT_13);
+  adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_0); // TODO: channels should be parametrized from pin number
+  esp_adc_cal_value_t val_type = 
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
+
+  // // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
+  // // make sure it's after the attenuation set call
+  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_17);
   // if (status == ESP_OK) {
   //   printf("v_ref routed to GPIO\n");
   // } else {
   //   printf("failed to route v_ref\n");
   // }
 
-  // calibrate the ADC with the measured VREF at 0 attenuation
-  adc1_config_width(ADC_WIDTH_BIT_13);
-  adc1_config_channel_atten(ADC1_CHANNEL_7,ADC_ATTEN_DB_0);
-  esp_adc_cal_value_t val_type = 
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
-  // analogReadResolution(13);
-  // analogSetAttenuation(ADC_0db);
-
-  pinMode(PWR_SENS_PIN, INPUT);
-  pinMode(BAT_SENS_PIN, INPUT);
-
-  int power = analogRead(PWR_SENS_PIN);   // read the input pin, 1024 max
+  adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
+  double rawAdcPower = adc1_get_raw(ADC1_CHANNEL_6);   // read the input pin, 8129 max
+  double vPowerMeasured = esp_adc_cal_raw_to_voltage(rawAdcPower, adc_chars);
+  double vPower = ((vPowerMeasured/1000.0) * (1000+10000)) / 1000.0;
+  
   bool connectedToPower = false;
-  if (power > 800) {
+  if (vPower > 4.0) {
     // as an alternative, this could be used for usb connected status, but
     // it would also fire when charging via a regular outlet
     connectedToPower = true;
   }
 
   double rawAdcBatteryVal = adc1_get_raw(ADC1_CHANNEL_7);
-  // double rawAdcBatteryVal = analogRead(BAT_SENS_PIN);
-  // double voltagePerNum = actualVRef/8192.0;
-  // double vBatMeasured = rawAdcBatteryVal*voltagePerNum;   // read the input pin, 8192 max
   double vBatMeasured = esp_adc_cal_raw_to_voltage(rawAdcBatteryVal, adc_chars);
   double vBat = ((vBatMeasured/1000.0) * (470000+4700000)) / 470000.0;
 
@@ -113,20 +137,6 @@ void setup() {
   pixels.begin();
   pixels.clear();
   pixels.show();
-
-  WebUSBSerial.landingPageURI("iotfreezer.com", false);
-  WebUSBSerial.deviceID(0x2341, 0x0002);
-  WebUSBSerial.setCallbacks(new MyWebUSBCallbacks());
-
-  USBSerial.setCallbacks(new MyCDCUSBCallbacks());
-
-  if(!WebUSBSerial.begin()) {
-    ardprintf("Failed to start webUSB stack");
-  }
-
-  if(!USBSerial.begin()) {
-    ardprintf("Failed to start USB stack");
-  }
 
   if (isCfgSaved()) {
     preferences.begin("iotfreezer", true);
@@ -138,9 +148,11 @@ void setup() {
   }
 
   // wait if usb connection appears - below 500 won't work
-  if (connectedToPower) {
-    delay(500);
-
+  if ((connectedToPower && ENABLE_USB_CONFIGURATOR)) {
+    // we can afford to wait a little longer since we know that the
+    // connected to power works well
+    delay(1500);
+    ardprintf("Connected!. Power is raw %f, measured %f, calculated %f", rawAdcPower, vPowerMeasured, vPower);
     if (usbConnected) {
       if (isCfgSaved()) {
         // green
@@ -181,6 +193,11 @@ void setup() {
     return;
   }
 
+  if (ENABLE_DISPLAY) {
+    setupDisplay();
+    draw(&records[recordCounter]);
+  }
+
   ardprintf("Measurement %d done", recordCounter);
   recordCounter++;
 
@@ -190,6 +207,12 @@ void setup() {
     return;
   }
   recordCounter = 0;
+
+  // everything after this point is just sending the measurement
+  // to internet, so it's safe to just return
+  if (!ENABLE_CLOUD_SYNC) {
+    return;
+  }
 
   if (!connectToWifi()) {
     ardprintf("Wi-fi connection failed");
@@ -271,7 +294,9 @@ void loop() {
       obj["timeBetweenMeasurements"].as<uint8_t>(),
       obj["maxRtcRecords"].as<uint8_t>()
     );
-    if (configSaved) {
+
+    // recheck, just in case
+    if (configSaved && isCfgSaved()) {
       // blue, so we know we've configured it even if it was already configured
       pixels.setPixelColor(0, pixels.Color(0, 0, 255));
       pixels.show();
