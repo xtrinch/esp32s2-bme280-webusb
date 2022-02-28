@@ -1,7 +1,7 @@
 Import("env")
 
 env.Append(CPPDEFINES=[
-  ("SENSOR_DASHBOARD_URL", "sensor-dashboard.trina.si"),
+  ("SENSOR_DASHBOARD_URL", "iotfreezer.com"),
   ("SENSOR_SPI_CS", 3), #  sensor chip select - CSB on bme
   ("SENSOR_SPI_MOSI", 2), # sensor SCA on bme
   ("SENSOR_SPI_MISO", 4), # sensor SDO on bme

@@ -28,8 +28,6 @@ void setupDisplay() {
   SPIFFS.begin();
 }
 
-int randomNumber = 0;
-
 uint16_t read16(fs::File& f)
 {
   // BMP data is stored little-endian, same as Arduino.
@@ -280,6 +278,4 @@ void draw(bme280record * record) {
   display.hibernate();
   
   Serial.println("Update finished");
-  delay(20000);
-  randomNumber ++;
 }
