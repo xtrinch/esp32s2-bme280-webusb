@@ -62,12 +62,10 @@ NoConn ~ 5250 3600
 NoConn ~ 5250 3500
 NoConn ~ 5250 3400
 NoConn ~ 5250 3300
-NoConn ~ 5250 3200
 NoConn ~ 4400 3800
 NoConn ~ 4400 3700
 NoConn ~ 4400 5000
 NoConn ~ 4400 4900
-NoConn ~ 4400 3200
 NoConn ~ 4400 4800
 NoConn ~ 4400 4700
 NoConn ~ 4400 4600
@@ -116,5 +114,35 @@ GND
 Text GLabel 4650 2600 3    50   Input ~ 0
 GND
 Text GLabel 5250 3100 1    50   Input ~ 0
+GND
+$Comp
+L Switch:SW_Push SW1
+U 1 1 6242CDC4
+P 5900 3200
+F 0 "SW1" H 5900 3485 50  0000 C CNN
+F 1 "RST_Push" H 5900 3394 50  0000 C CNN
+F 2 "" H 5900 3400 50  0001 C CNN
+F 3 "~" H 5900 3400 50  0001 C CNN
+	1    5900 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5700 3200 5250 3200
+Text GLabel 6100 3200 2    50   Input ~ 0
+GND
+$Comp
+L Switch:SW_Push SW2
+U 1 1 6242FB35
+P 3650 3200
+F 0 "SW2" H 3650 3485 50  0000 C CNN
+F 1 "SW_Push" H 3650 3394 50  0000 C CNN
+F 2 "" H 3650 3400 50  0001 C CNN
+F 3 "~" H 3650 3400 50  0001 C CNN
+	1    3650 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3850 3200 4400 3200
+Text GLabel 3450 3200 0    50   Input ~ 0
 GND
 $EndSCHEMATC
