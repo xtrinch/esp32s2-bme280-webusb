@@ -38,3 +38,7 @@ To check out the usb descriptors, run `lsusb -v`. To check out the kernel logs f
 
  `convert temperature-2-48.png -background white -alpha remove -alpha off -compress none -depth 24 -resize 48x48 temp-final.bmp`
 
+
+## Production deploy
+
+Make sure to turn off `DEBUG` to save power.

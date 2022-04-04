@@ -193,11 +193,6 @@ void setup() {
     return;
   }
 
-  if (ENABLE_DISPLAY) {
-    setupDisplay();
-    draw(&records[recordCounter]);
-  }
-
   ardprintf("Measurement %d done", recordCounter);
   recordCounter++;
 
@@ -207,6 +202,12 @@ void setup() {
     return;
   }
   recordCounter = 0;
+
+  // only refresh display when sending to cloud to save battery
+  if (ENABLE_DISPLAY) {
+    setupDisplay();
+    draw(&records[recordCounter]);
+  }
 
   // everything after this point is just sending the measurement
   // to internet, so it's safe to just return
