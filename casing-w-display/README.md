@@ -1,5 +1,5 @@
 # parametric display casing
 
-Parametric display casing drawn in FreeCAD for https://github.com/sensor-dashboard/sensor-dashboard-oled-display
+Parametric display casing drawn in FreeCAD.
 
-![Image of Yaktocat](https://github.com/sensor-dashboard/parametric-display-casing/blob/master/images/image.png)
+![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/casing-w-display.png)
