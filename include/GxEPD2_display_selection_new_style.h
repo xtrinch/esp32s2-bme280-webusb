@@ -15,12 +15,12 @@
 
 // select the display class (only one), matching the kind of display panel
 #define GxEPD2_DISPLAY_CLASS GxEPD2_BW
-//#define GxEPD2_DISPLAY_CLASS GxEPD2_3C
+// #define GxEPD2_DISPLAY_CLASS GxEPD2_3C // this is for the three color display from waveshare
 //#define GxEPD2_DISPLAY_CLASS GxEPD2_7C
 
 // select the display driver class (only one) for your  panel
 //#define GxEPD2_DRIVER_CLASS GxEPD2_154     // GDEP015OC1  200x200, IL3829, no longer available
-#define GxEPD2_DRIVER_CLASS GxEPD2_154_D67 // GDEH0154D67 200x200, SSD1681
+#define GxEPD2_DRIVER_CLASS GxEPD2_154_D67 // GDEH0154D67 200x200, SSD1681, bw driver class
 //#define GxEPD2_DRIVER_CLASS GxEPD2_154_T8  // GDEW0154T8  152x152, UC8151 (IL0373)
 //#define GxEPD2_DRIVER_CLASS GxEPD2_154_M09 // GDEW0154M09 200x200, JD79653A
 //#define GxEPD2_DRIVER_CLASS GxEPD2_154_M10 // GDEW0154M10 152x152, UC8151D
@@ -46,8 +46,8 @@
 //#define GxEPD2_DRIVER_CLASS GxEPD2_750     // GDEW075T8   640x384, UC8179 (IL0371)
 //#define GxEPD2_DRIVER_CLASS GxEPD2_750_T7  // GDEW075T7   800x480, GD7965
 // 3-color e-papers
-//#define GxEPD2_DRIVER_CLASS GxEPD2_154c     // GDEW0154Z04 200x200, IL0376F, no longer available
-//#define GxEPD2_DRIVER_CLASS GxEPD2_154_Z90c // GDEH0154Z90 200x200, SSD1682
+// #define GxEPD2_DRIVER_CLASS GxEPD2_154c     // GDEW0154Z04 200x200, IL0376F, no longer available - this is for the three color display from waveshare
+// #define GxEPD2_DRIVER_CLASS GxEPD2_154_Z90c // GDEH0154Z90 200x200, SSD1682
 //#define GxEPD2_DRIVER_CLASS GxEPD2_213c     // GDEW0213Z16 104x212, UC8151 (IL0373)
 //#define GxEPD2_DRIVER_CLASS GxEPD2_213_Z19c // GDEW0213Z19 104x212, UC8151D
 //#define GxEPD2_DRIVER_CLASS GxEPD2_290c     // GDEW029Z10  128x296, UC8151 (IL0373)

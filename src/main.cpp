@@ -162,6 +162,10 @@ void setup() {
         pixels.setPixelColor(0, pixels.Color(255, 0, 0));
       }
       pixels.show();
+      if (ENABLE_DISPLAY) {
+        setupDisplay();
+        showPcConn();
+      }
       // TODO: uncomment
       return; // don't do the measurement
     }

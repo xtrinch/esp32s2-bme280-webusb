@@ -24,7 +24,8 @@ uint16_t rgb_palette_buffer[max_palette_pixels]; // palette buffer for depth <= 
 
 void setupDisplay() {
   display.init();
-  display.display(false);
+
+  display.setRotation(1);
   SPIFFS.begin();
 }
 
@@ -55,10 +56,9 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
   bool flip = true; // bitmap is stored bottom-to-top
   uint32_t startTime = millis();
   if ((x >= display.epd2.WIDTH) || (y >= display.epd2.HEIGHT)) return;
-  Serial.println();
-  Serial.print("Loading image '");
-  Serial.print(filename);
-  Serial.println('\'');
+  ardprintf("\n");
+  ardprintf("Loading image '");
+  ardprintf(filename);
 #if defined(ESP32)
   file = SPIFFS.open(String("/") + filename, "r");
 #else
@@ -66,14 +66,14 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
 #endif
   if (!file)
   {
-    Serial.print("File not found");
+    ardprintf("File not found");
     return;
   }
   // Parse BMP header
   uint16_t signature = read16(file);
   if (signature == 0x4D42) // BMP signature
   {
-    Serial.println("Read BMP signature");
+    ardprintf("Read BMP signature");
     uint32_t fileSize = read32(file);
     uint32_t creatorBytes = read32(file);
     uint32_t imageOffset = read32(file); // Start of image data
@@ -83,18 +83,18 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
     uint16_t planes = read16(file);
     uint16_t depth = read16(file); // bits per pixel
     uint32_t format = read32(file);
-    Serial.println("Format");
-    Serial.println(format);
+    ardprintf("Format");
+    ardprintf("%d \n", format);
     if ((planes == 1) && ((format == 0) || (format == 3))) // uncompressed is handled, 565 also
     {
-      Serial.print("File size: "); Serial.println(fileSize);
-      Serial.print("Image Offset: "); Serial.println(imageOffset);
-      Serial.print("Header size: "); Serial.println(headerSize);
-      Serial.print("Bit Depth: "); Serial.println(depth);
-      Serial.print("Image size: ");
-      Serial.print(width);
-      Serial.print('x');
-      Serial.println(height);
+      ardprintf("File size: "); ardprintf("%d \n", fileSize);
+      ardprintf("Image Offset: "); ardprintf("%d \n", imageOffset);
+      ardprintf("Header size: "); ardprintf("%d \n", headerSize);
+      ardprintf("Bit Depth: "); ardprintf("%d \n", depth);
+      ardprintf("Image size: ");
+      ardprintf("%d", width);
+      ardprintf("x");
+      ardprintf("%d", height);
       // BMP rows are padded (if needed) to 4-byte boundary
       uint32_t rowSize = (width * depth / 8 + 3) & ~3;
       if (depth < 8) rowSize = ((width * depth + 8 - depth) / 8 + 3) & ~3;
@@ -226,18 +226,18 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
           // display.drawBitmap(output_row_mono_buffer, output_row_color_buffer, x, yrow, w, 1);
           display.drawBitmap(x, yrow, output_row_mono_buffer, w, 1, GxEPD_WHITE, GxEPD_BLACK);
         } // end line
-        Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
+        ardprintf("loaded in "); ardprintf("%d", millis() - startTime); ardprintf(" ms");
         // display.refresh();
       }
     }
   } else {
-    Serial.println("First line is weird");
-    Serial.println(signature);
+    ardprintf("First line is weird");
+    ardprintf("%d \n", signature);
   }
   file.close();
   if (!valid)
   {
-    Serial.println("bitmap format not handled.");
+    ardprintf("bitmap format not handled.");
   }
 }
 
@@ -266,16 +266,32 @@ void draw(bme280record * record) {
   // the input will come in as e.g. 4.2 double
   display.printf("%.0f%%", (record->battery - 3.2) * 100);
 
-  // display.setCursor(0,15);
-  // display.printf("Last update:");
-  // display.setCursor(0,37);
-  // display.printf("01/02/2021");
-
   // display.refresh(); // full update
   display.display(true); // partial update
 
   display.powerOff();
   display.hibernate();
   
-  Serial.println("Update finished");
+  ardprintf("Update finished");
+}
+
+void showPcConn() {
+  ardprintf("Will attempt to update the screen...");
+
+  display.setFullWindow();
+  display.fillScreen(GxEPD_YELLOW);
+
+  display.setTextColor(GxEPD_BLACK);
+  display.setFont(&FreeMonoBold24pt7b);
+  display.setTextSize(1);
+
+  display.setCursor(100,100);
+  display.printf("PC");
+
+  display.display(false);
+  
+  display.powerOff();
+  display.hibernate();
+
+  ardprintf("Update finished");
 }

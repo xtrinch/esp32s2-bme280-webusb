@@ -5,5 +5,6 @@
 
 void setupDisplay();
 void draw(bme280record * record);
+void showPcConn();
 
 #endif
