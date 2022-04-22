@@ -22,6 +22,8 @@ void ardprintf(const char *fmt, ...) {
 void goToSleep(int secondsToSleep) {
   ardprintf("Sleep: Every %d sec", secondsToSleep);
 
+  Serial.flush();
+
   esp_sleep_enable_timer_wakeup(secondsToSleep * uS_TO_S_FACTOR);
   // does not work, prolly needs to be some other button cuz it may be going into bootloader mode
   // esp_sleep_enable_ext0_wakeup((gpio_num_t)GPIO_NUM_0, 0); // TODO: parametrize as wakeup pin
@@ -31,8 +33,6 @@ void goToSleep(int secondsToSleep) {
   // does not work, input does not go high enough
   // rtc_gpio_pulldown_en((gpio_num_t)PWR_SENS_PIN);
   // esp_sleep_enable_ext0_wakeup((gpio_num_t)PWR_SENS_PIN, 1);
-
-  Serial.flush();
 
   // disables the brownout, apparently :)
   CLEAR_PERI_REG_MASK(RTC_CNTL_BROWN_OUT_REG, RTC_CNTL_BROWN_OUT_RST_ENA);

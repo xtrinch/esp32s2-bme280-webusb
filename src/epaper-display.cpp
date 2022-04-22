@@ -241,7 +241,7 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
   }
 }
 
-void draw(bme280record * record) {
+void draw(bme280record * record, bool connectedToPower, int sleepInMinutes) {
   display.setPartialWindow(0, 0, display.width(), display.height());
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold24pt7b);
@@ -261,10 +261,18 @@ void draw(bme280record * record) {
   drawBitmapFromSpiffs("battery.bmp", 155, 160);
   display.setFont(&FreeMonoBold12pt7b);
   display.setTextSize(1);
-  display.setCursor(105,185);
   // usable lipo battery cell voltage is from 3.2 to 4.2V,
   // the input will come in as e.g. 4.2 double
-  display.printf("%.0f%%", (record->battery - 3.2) * 100);
+  if (connectedToPower) {
+    display.setCursor(30,185);
+    display.printf("charging");
+  } else {
+    display.setCursor(105,185);
+    display.printf("%.0f%%", (record->battery - 3.2) * 100);
+  }
+
+  display.setCursor(5,165);
+  display.printf("Sync: %d min", sleepInMinutes);
 
   // display.refresh(); // full update
   display.display(true); // partial update
@@ -276,16 +284,14 @@ void draw(bme280record * record) {
 }
 
 void showPcConn() {
-  ardprintf("Will attempt to update the screen...");
-
   display.setFullWindow();
-  display.fillScreen(GxEPD_YELLOW);
+  display.fillScreen(GxEPD_WHITE);
 
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold24pt7b);
   display.setTextSize(1);
 
-  display.setCursor(100,100);
+  display.setCursor(70,110);
   display.printf("PC");
 
   display.display(false);

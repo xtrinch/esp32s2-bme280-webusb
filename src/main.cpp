@@ -53,9 +53,7 @@ class MyUSBCallbacks: public USBCallbacks {
 };
 
 void sleep() {
-  if (!usbConnected) {
-    goToSleep(sleepInMinutes*60);
-  }
+  goToSleep(sleepInMinutes*60);
 }
 
 bool isCfgSaved() {
@@ -78,6 +76,9 @@ const uint8_t TMP_PIN = 33;
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
 void setup() {
+  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  bool isReset = wakeup_reason != ESP_SLEEP_WAKEUP_TIMER;
+
   // this can stay, even if we're not using serial
   Serial.begin(115200);
 
@@ -108,8 +109,8 @@ void setup() {
   esp_adc_cal_value_t val_type = 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
 
-  // // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
-  // // make sure it's after the attenuation set call
+  // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
+  // make sure it's after the attenuation set call
   // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_17);
   // if (status == ESP_OK) {
   //   printf("v_ref routed to GPIO\n");
@@ -120,10 +121,10 @@ void setup() {
   adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
   double rawAdcPower = adc1_get_raw(ADC1_CHANNEL_6);   // read the input pin, 8129 max
   double vPowerMeasured = esp_adc_cal_raw_to_voltage(rawAdcPower, adc_chars);
-  double vPower = ((vPowerMeasured/1000.0) * (1000+10000)) / 1000.0;
+  double vPower = ((vPowerMeasured/1000.0) * (1000+10000)) / 1000.0; // voltage divider equation
   
   bool connectedToPower = false;
-  if (vPower > 4.0) {
+  if (vPower > 3.0) {
     // as an alternative, this could be used for usb connected status, but
     // it would also fire when charging via a regular outlet
     connectedToPower = true;
@@ -147,8 +148,9 @@ void setup() {
     preferences.end();
   }
 
-  // wait if usb connection appears - below 500 won't work
-  if ((connectedToPower && ENABLE_USB_CONFIGURATOR)) {
+  // wait if usb connection appears - we're supposed to reset the controller when connecting to pc
+  // - below 500 won't work
+  if ((isReset && ENABLE_USB_CONFIGURATOR)) {
     // we can afford to wait a little longer since we know that the
     // connected to power works well
     delay(1500);
@@ -194,29 +196,29 @@ void setup() {
   if (!makeMeasurement(&records[recordCounter])) {
     ardprintf("Failed to perform reading :(");
     sleep();
-    return;
   }
 
+  // save a copy, so we can display the most recent one on the display
+  int oldRecordCounter = recordCounter;
   ardprintf("Measurement %d done", recordCounter);
   recordCounter++;
 
   if (recordCounter < maxRtcRecords) {
     ardprintf("Going to sleep, next up is: %d", recordCounter);
     sleep();
-    return;
   }
   recordCounter = 0;
 
   // only refresh display when sending to cloud to save battery
   if (ENABLE_DISPLAY) {
     setupDisplay();
-    draw(&records[recordCounter]);
+    draw(&records[oldRecordCounter], connectedToPower, sleepInMinutes);
   }
 
   // everything after this point is just sending the measurement
   // to internet, so it's safe to just return
   if (!ENABLE_CLOUD_SYNC) {
-    return;
+    sleep();
   }
 
   if (!connectToWifi()) {
