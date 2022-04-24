@@ -271,8 +271,8 @@ void draw(bme280record * record, bool connectedToPower, int sleepInMinutes) {
     display.printf("%.0f%%", (record->battery - 3.2) * 100);
   }
 
-  display.setCursor(5,165);
-  display.printf("Sync: %d min", sleepInMinutes);
+  // display.setCursor(5,165);
+  // display.printf("Sync: %d min", sleepInMinutes);
 
   // display.refresh(); // full update
   display.display(true); // partial update
