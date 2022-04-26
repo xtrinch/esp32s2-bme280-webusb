@@ -2,7 +2,7 @@
 #include "driver/rtc_io.h"
 
 void ardprintf(const char *fmt, ...) {
-  #ifndef DEBUG
+  #if DEBUG != 1
   return;
   #endif
 
