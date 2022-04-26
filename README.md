@@ -1,6 +1,6 @@
 # esp32s2-bme280-webusb
 
-Sends periodic `bme280` humidity, temperature, gas, pressure and altitude data from `esp32s2 development board` to [sensor dashboard](http://iotfreezer.com) backend. 
+Sends periodic `bme280` humidity, temperature, pressure and battery voltage data from `esp32s2 development board` to [sensor dashboard](http://iotfreezer.com) backend. 
 
 Is configurable via a [web interface](http://iotfreezer.com/) using webusb. Since the board uses native usb communication, the serial output will also be emulated via USB so it may not work as you would expect a regular serial connection - if it's configured wrongly, there will be no output in your serial monitor. If the board sleeps, when you connect it to USB, you will not be able to flash it. Board needs to be wide awake and listening to USB commands for flashing to work. When the board is connected to the computer - the neopixel of the esp32s2 will light up and the display should display `PC` instead of the usual measurements.
 
@@ -47,11 +47,13 @@ Make sure to turn off `DEBUG` to save power.
 ## PCB
 
 See `schematics-w-display` folder.
+
 ![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/pcb.jpg)
 
 ## End product with casing
 
-For FreeCad project for the casing, see `casing-w-display` folder.
+Casing is parametric and drawn in FreeCad 0.19. It is made to fit the above PCB. For FreeCad project, see `casing-w-display` folder.
+
 ![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/casing1.jpg)
 ![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/casing2.jpg)
 
