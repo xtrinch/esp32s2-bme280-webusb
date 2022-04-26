@@ -42,3 +42,16 @@ To check out the usb descriptors, run `lsusb -v`. To check out the kernel logs f
 ## Production deploy
 
 Make sure to turn off `DEBUG` to save power.
+
+## PCB
+
+See `schematics-w-display` folder.
+![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/pcb.jpg)
+
+## End product with casing
+
+For FreeCad project for the casing, see `casing-w-display`.
+![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/casing1.jpg)
+![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/casing2.jpg)
+
+
