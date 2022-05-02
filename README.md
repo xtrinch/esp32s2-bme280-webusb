@@ -5,6 +5,9 @@ Sends periodic `bme280` humidity, temperature, pressure and battery voltage data
 Is configurable via a [web interface](http://iotfreezer.com/) using webusb. Since the board uses native usb communication, the serial output will also be emulated via USB so it may not work as you would expect a regular serial connection - if it's configured wrongly, there will be no output in your serial monitor. If the board sleeps, when you connect it to USB, you will not be able to flash it. Board needs to be wide awake and listening to USB commands for flashing to work. When the board is connected to the computer - the neopixel of the esp32s2 will light up and the display should display `PC` instead of the usual measurements.
 
 The board I used is: [ESP32-S2-DevKit-Lipo-USB from olimex](https://www.olimex.com/Products/IoT/ESP32-S2/ESP32-S2-DevKit-Lipo-USB/open-source-hardware).
+There's a couple of things to do to make this work for this specific board:
+1. remove the solder from LED1_ENABLE SMD jumper (i.e. open it), because it consumes a large current 
+2. solder the BAT_SENS and PWR_SENS jumpers, to be able to detect battery voltage levels
 
 If you botch the code and manage to put it to sleep when on USB, boot the board into bootloader mode by holding the button `BUT1` on the board when connecting to USB, then you will be able to flash via USB again.
 
