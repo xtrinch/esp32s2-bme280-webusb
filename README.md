@@ -25,7 +25,7 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 4. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
 
 ## Components
-- ESP32S2 dev board with native (!) usb support -> there should not be a usb to serial converter on the board
+- ESP32S2 dev board with native usb support, meaning there should not be a usb to serial converter on the board
 - Waveshare e-paper 1.54inch display - black and white version
 - Bosch BME280 sensor module
 - 3.7V LiPo battery (or other)
