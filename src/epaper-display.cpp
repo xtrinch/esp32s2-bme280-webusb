@@ -243,12 +243,11 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
 
 void draw(bme280record * record, bool connectedToPower, int sleepInMinutes) {
   display.setPartialWindow(0, 0, display.width(), display.height());
+  display.fillScreen(GxEPD_WHITE);
+
   display.setTextColor(GxEPD_BLACK);
   display.setFont(&FreeMonoBold24pt7b);
   display.setTextSize(1);
-
-  display.clearScreen();
-  display.firstPage(); // seems to be necessary
 
   drawBitmapFromSpiffs("thermometer.bmp", 4, 5);
   display.setCursor(75,49);
@@ -272,7 +271,9 @@ void draw(bme280record * record, bool connectedToPower, int sleepInMinutes) {
     display.printf("%.0f%%", (record->battery - 3.2) * 100);
   }
 
-  // display.refresh(); // full update
+  // display.setCursor(5,165);
+  // display.printf("wh: %d/%d", display.width(), display.height());
+
   display.display(true); // partial update
 
   display.powerOff();
@@ -292,7 +293,7 @@ void showPcConn() {
   display.setCursor(70,110);
   display.printf("PC");
 
-  display.display(false);
+  display.display(false); // full update
   
   display.powerOff();
   display.hibernate();
