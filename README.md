@@ -21,7 +21,7 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 
 1. Have a sensor dashboard backend running (see https://github.com/xtrinch/sensor-dashboard-nestjs-backend) or use [iotfreezer](http://iotfreezer.com/).
 2. Copy `import_env.example.py` to `import_env.py` and define your sensor dashboard url.
-3. Run `pio run -t buildfs` && `pio run -t uploadfs` to upload the images
+3. Run `pio run -t buildfs && pio run -t uploadfs` to upload the images
 4. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
 
 ## Components
