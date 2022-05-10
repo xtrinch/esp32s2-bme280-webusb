@@ -21,7 +21,7 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 
 1. Have a sensor dashboard backend running (see https://github.com/xtrinch/sensor-dashboard-nestjs-backend) or use [iotfreezer](http://iotfreezer.com/).
 2. Copy `import_env.example.py` to `import_env.py` and define your sensor dashboard url.
-3. Run `pio run -t buildfs && pio run -t uploadfs` to upload the images
+3. Run `pio run -t buildfs && pio run -t uploadfs` to upload the icons the display uses for humidity/temperature
 4. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
 
 ## Components
@@ -58,7 +58,7 @@ Make sure to turn off `DEBUG` to save power.
 
 ## PCB
 
-See `schematics-w-display` folder.
+See `schematics-w-display` folder for full project. It was drawn in KiCad and it's a two sided PCB.
 
 ![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/pcb.jpg)
 
