@@ -30,9 +30,9 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 ## Setup
 
 1. Have a sensor dashboard backend running (see https://github.com/xtrinch/sensor-dashboard-nestjs-backend) or use [iotfreezer](http://iotfreezer.com/).
-2. remove the solder from LED1_ENABLE SMD jumper (i.e. open it) on the ESP32S2, because it consumes a large current 
-3. solder the BAT_SENS and PWR_SENS jumpers on the ESP32S2, to be able to detect battery voltage levels
-4. Uncomment the part in `main.cpp` that routes VREF to a GPIO on the ESP32S2. Program the board, measure VREF and input it into `import_env.py` under REF_VOLTAGE (if it's e.g. 1.1, input 1100). This will be needed for accurate battery measurement and you cannot skip this step.
+2. remove the solder from `LED1_ENABLE SMD` jumper (i.e. open it) on the ESP32S2, because it consumes a large current 
+3. solder the `BAT_SENS` and `PWR_SENS` jumpers on the ESP32S2, to be able to detect battery voltage levels
+4. Uncomment the part in `main.cpp` that routes VREF to a GPIO on the ESP32S2. Program the board, measure VREF and input it into `import_env.py` under `REF_VOLTAGE` (if it's e.g. 1.1, input 1100). This will be needed for accurate battery measurement and you cannot skip this step.
 5. Copy `import_env.example.py` to `import_env.py` and define your sensor dashboard url.
 6. Run `pio run -t buildfs && pio run -t uploadfs` to upload the icons the display uses for humidity/temperature
 7. While having your board plugged into the computer, reboot the board and configure it via the web interface (via webusb) of the sensor dashboard (iotfreezer).
