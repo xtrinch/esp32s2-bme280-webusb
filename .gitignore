@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 import_env.py
+*.gcode

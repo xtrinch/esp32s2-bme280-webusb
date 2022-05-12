@@ -21,7 +21,7 @@ See also [backend](https://github.com/xtrinch/sensor-dashboard-nestjs-backend) a
 
 ## Additional things needed to assemble the PCB
 - PH2.0 8 pin connectors for the display (bent needle for the PCB)
-- min 2, max 4 1.8mm high spacers to mount the display above the ESP32S2, depending on how many sides of the display you want to fixate
+- min 2, max 4 2.0mm high spacers to mount the display above the ESP32S2, depending on how many sides of the display you want to fixate
 - PH2.0 2pin connector for the battery (if the battery doesn't already come with one)
 - bunch of male / female headers
 - 1x push button - right angled for RESET button
@@ -71,3 +71,5 @@ Casing is parametric and drawn in FreeCad 0.19. It is made to fit the above PCB.
 - PCB cable hole - either add one or move up
 - BOOT button should be as up as possible
 - additional USB chip for serial comm (top left)
+- increase the height of the box wall mount
+- shave a mm off of the last face of the wall box
