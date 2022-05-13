@@ -75,4 +75,3 @@ Casing is parametric and drawn in FreeCad 0.19. It is made to fit the above PCB.
 
 - increase the height of the box wall mount
 - shave a mm off of the last face of the wall box
-- height of box should be 2mm smaller now that spacers are shorter
