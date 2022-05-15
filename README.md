@@ -74,6 +74,3 @@ Casing is parametric and drawn in FreeCad 0.19. It is made to fit the above PCB.
 - remove the Y3 weird text on the PCB
 
 - make sure top side of wall slider slides nicely onto box
-- move up for 1mm the aux and usb mount holes
-- make sure the lid has a mount in the back so it doesn't fall out that easily
-- different slider type for wall mount
