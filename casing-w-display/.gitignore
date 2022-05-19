@@ -50,3 +50,6 @@ backups/
 *.fcstd2
 *.FCStd2
 Private
+*.gcode
+*.3mf
+*.stl
