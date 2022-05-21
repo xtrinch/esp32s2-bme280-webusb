@@ -72,3 +72,6 @@ Casing is parametric and drawn in FreeCad 0.19. It is made to fit the above PCB.
 - BOOT button should be as up as possible
 - additional USB chip for serial comm (top left)
 - remove the Y3 weird text on the PCB
+
+- move display 0.5mm to the left
+- shave another mm off of height
