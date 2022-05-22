@@ -111,12 +111,12 @@ void setup() {
 
   // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
   // make sure it's after the attenuation set call
-  esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_17);
-  if (status == ESP_OK) {
-    printf("v_ref routed to GPIO\n");
-  } else {
-    printf("failed to route v_ref\n");
-  }
+  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_17);
+  // if (status == ESP_OK) {
+  //   printf("v_ref routed to GPIO\n");
+  // } else {
+  //   printf("failed to route v_ref\n");
+  // }
 
   adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
   double rawAdcPower = adc1_get_raw(ADC1_CHANNEL_6);   // read the input pin, 8129 max
@@ -216,8 +216,10 @@ void setup() {
   }
 
   // everything after this point is just sending the measurement
-  // to internet, so it's safe to just return
-  if (!ENABLE_CLOUD_SYNC) {
+  // to internet, so it's safe to just return if we're not syncing to
+  // the cloud or we're connected to power - because the readings will be
+  // far too high to be realistic because charging heats it up
+  if (!ENABLE_CLOUD_SYNC || connectedToPower) {
     sleep();
   }
 
