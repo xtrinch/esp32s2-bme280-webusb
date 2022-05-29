@@ -5,10 +5,10 @@
 RTC_DATA_ATTR int recordCounter = 0;
 RTC_DATA_ATTR bme280record records[100]; // max 100, actual defined by config
 
-#define PIN 18
+#define NEOPIXEL_PIN 18
 #define NUMPIXELS 1
 
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 WebUSB WebUSBSerial;
 CDCusb USBSerial;
@@ -56,26 +56,11 @@ void sleep() {
   goToSleep(sleepInMinutes*60);
 }
 
-bool isCfgSaved() {
-  preferences.begin("iotfreezer", true);
-  bool cfgSaved = preferences.getBool("cfg_saved");
-  preferences.end();
-  return cfgSaved;
-}
-
-static void check_efuse(void)
-{
-  if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
-    printf("eFuse Two Point: Supported\n");
-  } else {
-    printf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
-  }
-}
-
-const uint8_t TMP_PIN = 33;
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
 
 void setup() {
+  WiFi.mode(WIFI_MODE_NULL);
+
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
   bool isReset = wakeup_reason != ESP_SLEEP_WAKEUP_TIMER;
 
@@ -109,14 +94,8 @@ void setup() {
   esp_adc_cal_value_t val_type = 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
 
-  // Use this, when you want to route VREF to a GPIO to measure it with a multimeter
-  // make sure it's after the attenuation set call
-  // esp_err_t status = adc_vref_to_gpio(ADC_UNIT_1, GPIO_NUM_17);
-  // if (status == ESP_OK) {
-  //   printf("v_ref routed to GPIO\n");
-  // } else {
-  //   printf("failed to route v_ref\n");
-  // }
+  // Uncomment, when you want to route VREF to a GPIO to measure it with a multimeter
+  routeVRefToGPIO(ADC_UNIT_1, GPIO_NUM_17);
 
   adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
   double rawAdcPower = adc1_get_raw(ADC1_CHANNEL_6);   // read the input pin, 8129 max
@@ -134,7 +113,6 @@ void setup() {
   double vBatMeasured = esp_adc_cal_raw_to_voltage(rawAdcBatteryVal, adc_chars);
   double vBat = ((vBatMeasured/1000.0) * (470000+4700000)) / 470000.0;
 
-  WiFi.mode(WIFI_MODE_NULL);
   pixels.begin();
   pixels.clear();
   pixels.show();
@@ -237,28 +215,14 @@ void setup() {
   ardprintf("Read access token: %s", accessToken.c_str());
   preferences.end();
 
-  const char* ca_cert = \
-  "-----BEGIN CERTIFICATE-----\n" \
-  "MIIDSjCCAjKgAwIBAgIQRK+wgNajJ7qJMDmGLvhAazANBgkqhkiG9w0BAQUFADA/\n" \
-  "MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT\n" \
-  "DkRTVCBSb290IENBIFgzMB4XDTAwMDkzMDIxMTIxOVoXDTIxMDkzMDE0MDExNVow\n" \
-  "PzEkMCIGA1UEChMbRGlnaXRhbCBTaWduYXR1cmUgVHJ1c3QgQ28uMRcwFQYDVQQD\n" \
-  "Ew5EU1QgUm9vdCBDQSBYMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\n" \
-  "AN+v6ZdQCINXtMxiZfaQguzH0yxrMMpb7NnDfcdAwRgUi+DoM3ZJKuM/IUmTrE4O\n" \
-  "rz5Iy2Xu/NMhD2XSKtkyj4zl93ewEnu1lcCJo6m67XMuegwGMoOifooUMM0RoOEq\n" \
-  "OLl5CjH9UL2AZd+3UWODyOKIYepLYYHsUmu5ouJLGiifSKOeDNoJjj4XLh7dIN9b\n" \
-  "xiqKqy69cK3FCxolkHRyxXtqqzTWMIn/5WgTe1QLyNau7Fqckh49ZLOMxt+/yUFw\n" \
-  "7BZy1SbsOFU5Q9D8/RhcQPGX69Wam40dutolucbY38EVAjqr2m7xPi71XAicPNaD\n" \
-  "aeQQmxkqtilX4+U9m5/wAl0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNV\n" \
-  "HQ8BAf8EBAMCAQYwHQYDVR0OBBYEFMSnsaR7LHH62+FLkHX/xBVghYkQMA0GCSqG\n" \
-  "SIb3DQEBBQUAA4IBAQCjGiybFwBcqR7uKGY3Or+Dxz9LwwmglSBd49lZRNI+DT69\n" \
-  "ikugdB/OEIKcdBodfpga3csTS7MgROSR6cz8faXbauX+5v3gTt23ADq1cEmv8uXr\n" \
-  "AvHRAosZy5Q6XkjEGB5YGV8eAlrwDPGxrancWYaLbumR9YbK+rlmM6pZW87ipxZz\n" \
-  "R8srzJmwN0jP41ZL9c8PDHIyh8bwRLtTcm1D9SZImlJnt1ir/md2cXjbDaJWFBM5\n" \
-  "JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo\n" \
-  "Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ\n" \
-  "-----END CERTIFICATE-----\n";
-  int httpCode = makeSecureNetworkRequest("https://iotfreezer.com/api/measurements/multi", accessToken.c_str(), jsonPayload, NULL, "POST", ca_cert);
+  int httpCode = makeSecureNetworkRequest(
+    "https://iotfreezer.com/api/measurements/multi", 
+    accessToken.c_str(), 
+    jsonPayload, 
+    NULL, 
+    "POST", 
+    IOT_FREEZER_CA_CERT
+  );
 
   ardprintf("API call HTTP code: %d", httpCode);
 
@@ -317,43 +281,4 @@ void loop() {
     inputJson[0] = '\0';
     fullWordRead = false;
   }
-}
-
-bool saveCfg(
-  const char * ssid, 
-  const char * password, 
-  const char * sensorAccessToken,
-  uint8_t timeBetweenMeasurements, // min
-  uint8_t maxRtcRecords // how many records before they are sent to server
-) {
-  if (!ssid || strlen(ssid) == 0 || !password || strlen(password) == 0) {
-    ardprintf("Need SSID & password to save config");
-    return false;
-  }
-  
-  ardprintf("Saving ssid: %s", ssid);
-  ardprintf("Saving password: %s", password);
-  ardprintf("Saving access_token: %s", sensorAccessToken);
-  ardprintf("Saving time_between: %d", timeBetweenMeasurements);
-  ardprintf("Saving max_rtc_records: %d", maxRtcRecords);
-
-  bool retVal = true;
-
-  preferences.begin("iotfreezer", false);
-
-  if (
-    !preferences.putString("ssid", ssid) ||
-    !preferences.putString("password", password) ||
-    !preferences.putString("access_token", sensorAccessToken) ||
-    !preferences.putInt("time_between", timeBetweenMeasurements) ||
-    !preferences.putInt("max_rtc_records", maxRtcRecords) ||
-    !preferences.putBool("cfg_saved", true)
-  ) {
-    ardprintf("Could not save some config data to preferences");
-    retVal = false;
-  }
-
-  preferences.end();
-
-  return retVal;
 }

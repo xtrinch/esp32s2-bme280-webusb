@@ -11,6 +11,7 @@
 #include <esp_wifi.h>
 #include <esp_sleep.h>
 #include <Preferences.h>
+#include <driver/adc.h>
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
 
@@ -38,5 +39,8 @@ bool saveCfg(
   uint8_t timeBetweenMeasurements, // min
   uint8_t maxRtcRecords // how many records before they are sent to server
 );
+bool isCfgSaved();
+void check_efuse(void);
+void routeVRefToGPIO(adc_unit_t adc_unit, gpio_num_t gpio);
 
 #endif

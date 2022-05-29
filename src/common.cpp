@@ -1,5 +1,6 @@
 #include "common.h"
 #include "driver/rtc_io.h"
+#include "esp_adc_cal.h"
 
 void ardprintf(const char *fmt, ...) {
   #if DEBUG != 1
@@ -102,4 +103,71 @@ bool connectToWifi() {
   ardprintf("Station: Connected to WiFi");
 
   return true;
+}
+
+bool saveCfg(
+  const char * ssid, 
+  const char * password, 
+  const char * sensorAccessToken,
+  uint8_t timeBetweenMeasurements, // min
+  uint8_t maxRtcRecords // how many records before they are sent to server
+) {
+  if (!ssid || strlen(ssid) == 0 || !password || strlen(password) == 0) {
+    ardprintf("Need SSID & password to save config");
+    return false;
+  }
+  
+  ardprintf("Saving ssid: %s", ssid);
+  ardprintf("Saving password: %s", password);
+  ardprintf("Saving access_token: %s", sensorAccessToken);
+  ardprintf("Saving time_between: %d", timeBetweenMeasurements);
+  ardprintf("Saving max_rtc_records: %d", maxRtcRecords);
+
+  bool retVal = true;
+
+  preferences.begin("iotfreezer", false);
+
+  if (
+    !preferences.putString("ssid", ssid) ||
+    !preferences.putString("password", password) ||
+    !preferences.putString("access_token", sensorAccessToken) ||
+    !preferences.putInt("time_between", timeBetweenMeasurements) ||
+    !preferences.putInt("max_rtc_records", maxRtcRecords) ||
+    !preferences.putBool("cfg_saved", true)
+  ) {
+    ardprintf("Could not save some config data to preferences");
+    retVal = false;
+  }
+
+  preferences.end();
+
+  return retVal;
+}
+
+bool isCfgSaved() {
+  preferences.begin("iotfreezer", true);
+  bool cfgSaved = preferences.getBool("cfg_saved");
+  preferences.end();
+  return cfgSaved;
+}
+
+void check_efuse(void) {
+  if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+    ardprintf("eFuse Two Point: Supported\n");
+  } else {
+    ardprintf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
+  }
+}
+
+// Use this, when you want to route VREF to a GPIO to measure it with a multimeter
+// make sure it's after the attenuation set call
+void routeVRefToGPIO(adc_unit_t adc_unit, gpio_num_t gpio) {
+  esp_err_t status = adc_vref_to_gpio(adc_unit, gpio);
+  if (status == ESP_OK) {
+    printf("v_ref routed to GPIO\n");
+  } else {
+    printf("failed to route v_ref\n");
+  }
+  // loop forever so we never sleep
+  while(true);
 }
