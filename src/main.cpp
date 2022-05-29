@@ -1,5 +1,4 @@
 #include "main.h"
-#include <driver/adc.h>
 #include "esp_adc_cal.h"
 
 RTC_DATA_ATTR int recordCounter = 0;
