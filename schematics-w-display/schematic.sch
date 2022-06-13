@@ -17,8 +17,8 @@ $Comp
 L Connector:Conn_01x21_Female J1
 U 1 1 604CADD6
 P 5450 4100
-F 0 "J1" H 5478 4126 50  0000 L CNN
-F 1 "Conn_01x21_Female_ESP" H 5478 4035 50  0000 L CNN
+F 0 "J1" H 5300 2900 50  0000 L CNN
+F 1 "Conn_01x21_Female_ESP" H 4950 3000 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x21_P2.54mm_Vertical" H 5450 4100 50  0001 C CNN
 F 3 "~" H 5450 4100 50  0001 C CNN
 	1    5450 4100
@@ -56,8 +56,6 @@ NoConn ~ 5250 4000
 NoConn ~ 5250 3900
 NoConn ~ 5250 3800
 NoConn ~ 5250 3700
-NoConn ~ 5250 3600
-NoConn ~ 5250 3500
 NoConn ~ 5250 3400
 NoConn ~ 5250 3300
 NoConn ~ 4400 3800
@@ -195,43 +193,6 @@ Wire Wire Line
 	5250 3200 5700 3200
 Text GLabel 6100 3200 2    50   Input ~ 0
 GND
-$Comp
-L Sensor_Optical:LDR03 R1
-U 1 1 613275E0
-P 2650 3250
-F 0 "R1" H 2720 3296 50  0000 L CNN
-F 1 "LDR03" H 2720 3205 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" V 2825 3250 50  0001 C CNN
-F 3 "http://www.elektronica-componenten.nl/WebRoot/StoreNL/Shops/61422969/54F1/BA0C/C664/31B9/2173/C0A8/2AB9/2AEF/LDR03IMP.pdf" H 2650 3200 50  0001 C CNN
-	1    2650 3250
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R2
-U 1 1 613286A5
-P 2650 3650
-F 0 "R2" H 2720 3696 50  0000 L CNN
-F 1 "10kOhm" H 2720 3605 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" V 2580 3650 50  0001 C CNN
-F 3 "~" H 2650 3650 50  0001 C CNN
-	1    2650 3650
-	1    0    0    -1  
-$EndComp
-Text GLabel 2650 3800 3    50   Input ~ 0
-GND
-Text GLabel 2650 3100 1    50   Input ~ 0
-3v3
-Wire Wire Line
-	4400 3700 4000 3700
-Wire Wire Line
-	4000 3700 4000 3450
-Wire Wire Line
-	2650 3450 2650 3400
-Wire Wire Line
-	2650 3450 4000 3450
-Wire Wire Line
-	2650 3500 2650 3450
-Connection ~ 2650 3450
 Text GLabel 3550 3650 2    50   Input ~ 0
 3v3
 Wire Wire Line
@@ -240,4 +201,38 @@ Text GLabel 4550 2600 3    50   Input ~ 0
 3v3
 Text GLabel 4400 3100 2    50   Input ~ 0
 3v3
+Text GLabel 6350 3650 0    50   Input ~ 0
+3v3
+Wire Wire Line
+	5250 3500 5750 3500
+Text Label 5500 3500 0    50   ~ 0
+RX-TX
+Text Label 5500 3600 0    50   ~ 0
+TX-RX
+Wire Wire Line
+	5250 3600 5650 3600
+NoConn ~ 6350 3750
+NoConn ~ 6350 4150
+$Comp
+L Connector:Conn_01x06_Female J5
+U 1 1 62A72A06
+P 6550 3850
+F 0 "J5" H 6578 3826 50  0000 L CNN
+F 1 "Conn_01x06_Female_RS232_USB" H 6578 3735 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical" H 6550 3850 50  0001 C CNN
+F 3 "~" H 6550 3850 50  0001 C CNN
+	1    6550 3850
+	1    0    0    -1  
+$EndComp
+Text GLabel 6350 4050 0    50   Input ~ 0
+GND
+Wire Wire Line
+	6350 3950 5750 3950
+Wire Wire Line
+	5750 3500 5750 3950
+Wire Wire Line
+	6350 3850 5650 3850
+Wire Wire Line
+	5650 3850 5650 3600
+NoConn ~ 4400 3700
 $EndSCHEMATC

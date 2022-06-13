@@ -68,4 +68,4 @@ Casing is parametric and drawn in FreeCad 0.19. It is made to fit the above PCB.
 ![Image of Yaktocat](https://github.com/xtrinch/esp32s2-bme280-webusb/blob/master/images/casing2.jpg)
 
 # TODOs
-- additional USB chip for serial comm (top left)
+/
