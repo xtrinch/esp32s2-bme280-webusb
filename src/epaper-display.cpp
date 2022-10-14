@@ -268,7 +268,7 @@ void draw(bme280record * record, bool connectedToPower, int sleepInMinutes) {
   } else {
     display.setCursor(105,185);
     // 4.2 - 3.2 === 1, multiply with 100
-    display.printf("%.0f%%", (record->battery - 3.2) * 100);
+    display.printf("%.0f%%", (record->battery - 3.2) * 100); // may go into -
   }
 
   // display.setCursor(5,165);

@@ -51,8 +51,8 @@ class MyUSBCallbacks: public USBCallbacks {
   }
 };
 
-void sleep() {
-  goToSleep(sleepInMinutes*60);
+void sleep(bool forever = false) {
+  goToSleep(sleepInMinutes*60, forever);
 }
 
 esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
@@ -93,8 +93,9 @@ void setup() {
   esp_adc_cal_value_t val_type = 
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_13, REF_VOLTAGE, adc_chars);
 
+  // IMPORTANT:
   // Uncomment, when you want to route VREF to a GPIO to measure it with a multimeter
-  routeVRefToGPIO(ADC_UNIT_1, GPIO_NUM_17);
+  // routeVRefToGPIO(ADC_UNIT_1, GPIO_NUM_17);
 
   adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
   double rawAdcPower = adc1_get_raw(ADC1_CHANNEL_6);   // read the input pin, 8129 max
@@ -154,6 +155,11 @@ void setup() {
   // delay(5000);
 
   ardprintf("Measured battery voltage is %f", vBat);
+  if (vBat <= 3.2 && !connectedToPower && !usbConnected) {
+    // go to sleep indefinetly, battery is empty
+    sleep(true);
+  }
+
   records[recordCounter].battery = (float)vBat;
   records[recordCounter].rawBattery = (float)rawAdcBatteryVal;
 

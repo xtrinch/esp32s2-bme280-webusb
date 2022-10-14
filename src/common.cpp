@@ -20,12 +20,14 @@ void ardprintf(const char *fmt, ...) {
 }
 
 
-void goToSleep(int secondsToSleep) {
+void goToSleep(int secondsToSleep, bool forever = false) {
   ardprintf("Sleep: Every %d sec", secondsToSleep);
 
   Serial.flush();
 
-  esp_sleep_enable_timer_wakeup(secondsToSleep * uS_TO_S_FACTOR);
+  if (!forever) {
+    esp_sleep_enable_timer_wakeup(secondsToSleep * uS_TO_S_FACTOR);
+  }
   // does not work, prolly needs to be some other button cuz it may be going into bootloader mode
   // esp_sleep_enable_ext0_wakeup((gpio_num_t)GPIO_NUM_0, 0); // TODO: parametrize as wakeup pin
   // rtc_gpio_pullup_en((gpio_num_t)GPIO_NUM_0);

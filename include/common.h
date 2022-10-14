@@ -22,7 +22,7 @@ extern CDCusb USBSerial;
 extern Preferences preferences;
 
 void ardprintf(const char *fmt, ...);
-void goToSleep(int secondsToSleep);
+void goToSleep(int secondsToSleep, bool forever);
 int makeSecureNetworkRequest(
   const char * url, 
   const char * authorization, 
