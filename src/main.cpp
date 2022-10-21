@@ -84,8 +84,8 @@ void setup() {
     return;
   }
 
-  pinMode(BAT_SENS_PIN, INPUT);
-  pinMode(PWR_SENS_PIN, INPUT);
+  pinMode(BAT_SENS_PIN, INPUT_PULLDOWN);
+  pinMode(PWR_SENS_PIN, INPUT_PULLDOWN);
 
   // calibrate the ADC with the measured VREF at 0 attenuation
   adc1_config_width(ADC_WIDTH_BIT_13);
@@ -170,6 +170,11 @@ void setup() {
 
   if (!setupbme280()) {
     ardprintf("BME setup is falsch :(");
+
+    // yellow
+    pixels.setPixelColor(0, pixels.Color(255, 255, 0));
+    pixels.show();
+
     sleep();
   };
 
@@ -178,6 +183,11 @@ void setup() {
   // make a sensor reading
   if (!makeMeasurement(&records[recordCounter])) {
     ardprintf("Failed to perform reading :(");
+
+    // yellow
+    pixels.setPixelColor(0, pixels.Color(255, 255, 0));
+    pixels.show();
+
     sleep();
   }
 

@@ -274,7 +274,7 @@ void draw(bme280record * record, bool connectedToPower, int sleepInMinutes) {
   // display.setCursor(5,165);
   // display.printf("wh: %d/%d", display.width(), display.height());
 
-  display.display(true); // partial update
+  display.display(false); // full update, some displays dont show anything with a partial one
 
   display.powerOff();
   display.hibernate();
